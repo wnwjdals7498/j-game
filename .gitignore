@@ -1,0 +1,19 @@
+# Python / ETL
+tools/.venv/
+tools/raw/
+tools/build/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 서명 비밀 (6단계)
+*.keystore
+*.jks
+key.properties
+app/android/key.properties
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+.idea/
+*.iml

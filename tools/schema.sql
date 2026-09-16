@@ -1,0 +1,1 @@
+-- word, sense, word_stat, word_char, meta 스키마 (02-09에서 채움)

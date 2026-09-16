@@ -1,0 +1,41 @@
+"""ETL 설정값. 조정은 전부 여기서."""
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+RAW = ROOT / "tools" / "raw"
+BUILD = ROOT / "tools" / "build"
+FIXTURES = ROOT / "tools" / "fixtures"
+APP_ASSETS = ROOT / "app" / "assets"
+
+# --- 표제어 필터 (02-06) ---
+MIN_LEN = 2               # 1음절 제외: 격자 교차 불가
+MAX_LEN = 5               # 6음절 이상 제외: 격자에 안 들어감
+HANGUL_START = 0xAC00     # 완성형 범위
+HANGUL_END = 0xD7A3
+ALLOWED_POS = {"명사"}    # 1차 범위. 02-01 조사 결과의 실제 값으로 맞출 것
+EXCLUDE_WORD_TYPES = {"구", "속담", "관용구"}
+EXCLUDE_PROPER_NOUN = True
+
+# --- 뜻풀이 (02-03, 02-09) ---
+DEFINITION_MAX_CHARS = 80   # 용량 목표 10MB의 주 조절 손잡이
+SENSES_PER_WORD = 1         # 앱에 넣는 뜻풀이 개수
+
+# --- 난이도 (02-08) ---
+TIER_COUNT = 7
+TIER_RATIO = [25, 22, 18, 14, 10, 7, 4]   # 합 100. 피라미드. 등분위 금지
+ADJ_VOCAB = {"A": -0.15, "B": -0.10, "C": -0.05}
+ADJ_IN_KRDICT = -0.10
+ADJ_PER_EXTRA_SYLLABLE = 0.03    # (음절수 - 2) 배
+ADJ_COMPLEX_JAMO = 0.05
+NO_FREQ_BASE = 1.0               # 빈도 정보 없음 = 가장 어려움
+
+# --- 출처 비트 (02-09 schema) ---
+SRC_KRDICT = 1
+SRC_STDICT = 2
+
+# --- 메타 ---
+SCHEMA_VERSION = 1
+DB_VERSION = 1        # 갱신할 때마다 +1 (05-01 manifest 비교 키)
+
+assert sum(TIER_RATIO) == 100, "TIER_RATIO must sum to 100"
+assert len(TIER_RATIO) == TIER_COUNT
