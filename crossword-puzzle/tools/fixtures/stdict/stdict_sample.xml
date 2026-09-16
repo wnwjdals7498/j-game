@@ -323,6 +323,12 @@
           <sense_info>
             <sense_code>98780</sense_code>
             <definition>앉아서 책을 읽거나 글을 쓰는 데 쓰는 상.</definition>
+            <!-- 필터에 걸리지 않는(= 출력에 남는) 항목의 예문.
+                 02-04 라이선스 제외 테스트가 실제로 뭔가를 막는지 확인용. -->
+            <example_info>
+              <type>문장</type>
+              <example>책상 위에 책이 놓여 있다.</example>
+            </example_info>
           </sense_info>
         </comm_pattern_info>
       </pos_info>
