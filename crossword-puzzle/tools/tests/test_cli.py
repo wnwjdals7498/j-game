@@ -14,9 +14,10 @@ def test_cli_requires_subcommand():
     with pytest.raises(SystemExit):
         cli.main([])
 
-def test_build_stub_raises():
-    # parse_krdict(02-03)·parse_stdict(02-04)·parse_freq/parse_vocab(02-05)·
-    # normalize(02-06)·merge(02-07)·score(02-08) 은 구현됐다.
-    # 아직 스텁인 다음 단계로 대상만 옮긴다.
+def test_report_stub_raises():
+    # build 파이프라인 8단계(02-03~02-09)는 전부 구현됐다.
+    # 아직 스텁인 건 report/check(02-10) 뿐이라 대상을 그쪽으로 옮긴다.
     with pytest.raises(NotImplementedError):
-        cli.main(["build", "--only", "build_sqlite"])
+        cli.main(["report"])
+    with pytest.raises(NotImplementedError):
+        cli.main(["check"])

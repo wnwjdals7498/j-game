@@ -549,3 +549,114 @@ tools\.venv\Scripts\python.exe -m pytest tools/tests/test_score.py tools/tests/t
 `round(,6)` 자릿수를 더했다.
 (02-08 DoD 는 "테스트 14종" 이라고 적었지만 같은 문서 "테스트" 표는 15행이다.
 표를 정본으로 보고 15종을 전부 구현했다 — 문서 자체가 해소한 불일치이지 임의 결정이 아니다.)
+
+
+---
+
+## schema.sql · SQLite 빌드 (02-09)
+
+> ⚠ 아래 숫자는 전부 **손수 만든 샘플 16표제어 기반**이다 (실데이터 아님, 00-01 승인 대기).
+
+`tools/schema.sql` — word · sense · word_char · word_stat · meta 5개 테이블 +
+idx_word_c1..c5 · idx_sense_headword 6개 인덱스.
+[docs/plan/02-09.build-sqlite.md](../docs/plan/02-09.build-sqlite.md) 의 SQL 을 그대로 옮겼다.
+**이 파일이 3단계 drift 스키마(03-01)·5단계 db-swapper(05-03)와 1:1 대응하는 단일 진실**이다
+(PLAN.md 3절 계약). 여기가 바뀌면 03-01·05-03 문서도 같이 고친다.
+
+`tools/build_sqlite.py` — `build/scored.jsonl` → `build/words.sqlite`.
+
+### 실적
+
+| 입력 | 단어 | 뜻풀이 | word_char | 파일 크기 | 소요 시간 |
+|---|---|---|---|---|---|
+| 샘플 `scored.jsonl`(16) | 16 | 16 | 44 | **0.07 MB** | 0.0s |
+| 실데이터 | **미측정 — 승인 대기** | — | — | — | — |
+
+명령: `tools\.venv\Scripts\python.exe -m tools build --fixtures`
+
+용량 목표는 10MB(DESIGN 6절)다. 샘플은 0.07MB라 목표 검증이 사실상 무의미하다 —
+실데이터가 오면 다시 재야 하는 항목이다. 초과 시 대응은 02-09 "막히면" 순서
+(`DEFINITION_MAX_CHARS` 80→60 → `word_char` 제거 검토 → `freq_rank` 제거)를 따른다.
+
+### meta 6키
+
+| key | 이번 빌드 값 |
+|---|---|
+| `schema_version` | `config.SCHEMA_VERSION` (1) |
+| `db_version` | `config.DB_VERSION` (1) |
+| `built_at` | ISO8601 UTC. **매 실행 달라진다** |
+| `word_count` | 16 |
+| `source_versions` | `{"origin": "fixtures", "files": {파일명: {bytes, mtime}}}` |
+| `license_notice` | `LICENSE_PENDING` 문구 (아래) |
+
+02-09 표는 두 값의 **뜻**만 정하고 계산법은 안 정했다. 문서가 준 뜻 안에서 이렇게 구현했다.
+
+- `source_versions` — "원본 자료 버전/날짜 JSON". 자료 자체에 버전 필드가 없으므로
+  입력 디렉터리(`--fixtures` 면 `tools/fixtures/`, 아니면 `tools/raw/`)를 훑어
+  파일별 바이트 수·수정일을 적는다. `origin` 키가 **이 DB가 실데이터인지 샘플인지**를 말한다.
+  02-10 리포트와 눈 검수가 그걸 알아야 해서 넣었다.
+- `license_notice` — "`docs/LICENSES.md` 요약 문자열". 그 파일의 `## 제목` 과 바로 뒤
+  `- 라이선스:` 줄을 짝지어 ` / ` 로 이은 것이다. **지금 `docs/LICENSES.md` 는 없다**
+  (00-01 은 HUMAN 문서, 이용 신청 승인 대기). 없을 때는 `build_sqlite.LICENSE_PENDING`
+  ("출처 표기 미확정 …")이 들어간다. 00-01 이 끝나면 재빌드만 하면 실제 문구로 바뀐다.
+
+### 재현성
+
+`built_at` 을 빼면 같은 입력 → **같은 바이트**다. 확인 방법:
+`--fixtures` 로 두 번 빌드해 각각 `meta.built_at` 을 같은 값으로 덮고 `VACUUM` 한 뒤
+sha256 을 비교했더니 동일했다 (`01b2fa3da0a28115…`, 73,728 바이트).
+
+세 가지를 고정해서 얻은 결과다.
+
+1. 빌드마다 기존 파일을 지우고 새로 만든다 (`dst.unlink()`).
+2. `rows.sort(key=headword)` 로 삽입 순서를 고정 → SQLite rowid 도 같아진다.
+3. `word_char` 는 `set()` 으로 고유 음절만 뽑는데, **set 순회 순서에 기대면 안 되므로**
+   `char_rows.sort()` 를 한 번 더 건다. 02-09 골격에는 없던 한 줄인데, 없으면
+   같은 입력에서 파일 바이트가 흔들려 05-01 의 sha256 비교가 깨진다.
+
+`built_at` 만은 피할 수 없다. 05-01 이 릴리스 시점에 파일 sha256 을 계산하므로 문제되지는
+않지만, "입력이 같은데 파일이 다르다" 를 디버깅할 때 헷갈리니 기억해 둘 것 (02-09 "재현성").
+
+### 패턴 질의 인덱스 — 16행에서는 검증할 수 없다
+
+`test_pattern_query_uses_index` 는 3단계 격자 탐색 성능의 선행 검증이다.
+`EXPLAIN QUERY PLAN` 에 `idx_word_c2` 가 나와야 한다. 그런데 행이 몇십 개뿐이면
+플래너가 full scan 을 고르는 게 정상이라, 02-09 "막히면" 이 지시한 대로
+**합성 3,000행**(중복 제거 후)으로 돌린다. 샘플 16행 DB로 같은 질의를 하면 통과하지 않는다.
+
+`(len, tier, cN)` 순서로 통과했다 — `tier IN (1,2)` 가 범위 조건이라 `cN` 을 못 쓸 수도
+있다는 02-09 의 경고는 이번에는 현실이 되지 않았다. 실데이터에서 깨지면 그때
+`(len, cN, tier)` 로 바꾸고 `schema.sql` · 03-01 을 같이 고친다.
+
+### 골격에서 바꾼 것
+
+- 용량 초과 경고에 `⚠` 대신 `경고:` 를 쓴다. 콘솔이 cp949 일 수 있어서다
+  (02-06·02-07 에서 이미 같은 이유로 정해 둔 규칙).
+- `char_rows.sort()` 추가 (위 "재현성" 3번).
+- `_source_versions()` 가 `use_fixtures` 를 받는다. 파이프라인이 모듈에 넘겨주는 유일한
+  인자이고, 실데이터/샘플 구분이 바로 그 값이다.
+
+### app/assets 복사
+
+```powershell
+Copy-Item tools/build/words.sqlite app/assets/words.sqlite -Force
+```
+
+**커밋한다** — 02-09 "app/assets 복사" 의 권고를 따랐고, 결정을 `docs/DESIGN.md` 5절
+"그 외" 에 기록했다. 지금 커밋된 파일은 **샘플로 만든 것**이라 실데이터가 아니다.
+DB 안 `meta.source_versions.origin` 이 `fixtures` 이므로 파일만 봐도 구분된다.
+
+### 검증
+
+```powershell
+tools\.venv\Scripts\python.exe -m tools build --fixtures
+tools\.venv\Scripts\python.exe -m pytest tools/tests/test_build_sqlite.py -q
+```
+
+`test_build_sqlite.py` **12개** — 02-09 "테스트" 절 표 12행(테이블 존재 · 인덱스 존재 ·
+word 행 수 · c1..c5 매핑 · word_stat 빈 테이블 · meta 필수 키 · 뜻풀이 길이 컷 ·
+유의어 직렬화 · word_char 역색인 · FK 무결성 · 재실행 · 패턴 질의 인덱스 사용)과 1:1이다.
+DoD 의 "테스트 12종" 과도 수가 맞는다.
+
+`tools/tests/test_cli.py` 의 "아직 스텁" 대상은 `build_sqlite` 에서 `report`/`check`(02-10)로
+옮겼다. build 파이프라인 8단계는 이제 전부 구현됐다.

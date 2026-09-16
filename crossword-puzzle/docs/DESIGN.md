@@ -113,6 +113,13 @@ word_char  역색인                  "~와 ~를 포함한 단어" 질의용
 
 - 채움 단어 풀은 기초사전만으로 시작. 표준 보충분은 대부분 최하위 티어라 채움용으로 못 씀.
   생성 실패율 측정 후 필요하면 투입
+- **`app/assets/words.sqlite` 는 커밋한다** (2단계에서 확정. 출처: `plan/02-09.build-sqlite.md`
+  "app/assets 복사"의 권고). 클론만 하면 앱이 빌드된다. 원본 자료는 재배포 불가지만
+  파생 DB는 CC BY-SA 2.0 KR로 배포 가능하고, 갱신이 6개월에 한 번이라 저장소 증가가 느리다.
+  뒤집으려면 `.gitignore` 에 `app/assets/words.sqlite` 를 넣고, 빌드 전에 항상
+  `python -m tools build` 를 돌리는 절차를 `docs/RELEASE.md`(06-05)에 명시한다.
+  현재 커밋된 파일은 **`tools/fixtures/` 샘플로 만든 것**이라 실데이터가 아니다
+  (00-01 승인 대기). DB 안 `meta.source_versions.origin` 이 `fixtures` 로 그 사실을 말한다.
 
 ---
 
