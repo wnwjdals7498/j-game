@@ -7,7 +7,6 @@ plugins {
 android {
     namespace = "io.github.wnwjdals7498.jgame"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
