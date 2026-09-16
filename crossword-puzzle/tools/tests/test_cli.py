@@ -15,5 +15,6 @@ def test_cli_requires_subcommand():
         cli.main([])
 
 def test_build_stub_raises():
+    # parse_krdict 는 02-03 에서 구현됐다. 아직 스텁인 다음 단계로 대상만 옮긴다.
     with pytest.raises(NotImplementedError):
-        cli.main(["build", "--only", "parse_krdict"])
+        cli.main(["build", "--only", "parse_stdict"])

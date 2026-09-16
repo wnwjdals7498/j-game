@@ -95,6 +95,16 @@ csv 는 `*freq*.csv` / `*vocab*.csv` 이름으로 구분되므로 평평하게 �
 1음절(`물`)·6음절(`국제연합기구`)·비한글(`PC방`)·띄어쓰기 구(`가게 주인`)·속담·관용구·고유명사,
 그리고 **예문·음성·이미지 필드** (02-03의 라이선스 제외 테스트가 실제로 뭔가를 막는지 확인용).
 
+#### 파싱 실적 (02-03)
+
+| 입력 | 행 수 | 소요 시간 |
+|---|---|---|
+| 샘플 `tools/fixtures/krdict/krdict_sample.xml` (20항목) | 20 | 0.0s |
+| 실데이터 `tools/raw/krdict/*.xml` | **미측정 — 승인 대기** | — |
+
+명령: `tools\.venv\Scripts\python.exe -m tools build --only parse_krdict --fixtures`
+실데이터가 도착하면 `--fixtures` 없이 한 번 돌려 위 두 번째 행을 채운다 (02-03 DoD).
+
 ### 2. 표준국어대사전 (샘플: `tools/fixtures/stdict/stdict_sample.xml`)
 
 기초사전과 **같은 `item/word_info` 골격**으로 모방했고, 표준 고유 필드를 더했다.
