@@ -8,7 +8,7 @@ import 'package:jgame/domain/generator/grid.dart';
 import 'package:jgame/domain/generator/grid_rules.dart';
 import 'package:jgame/domain/model/level_spec.dart';
 
-import 'fixtures/dummy_dictionary.dart';
+import 'package:jgame/domain/fixtures/dummy_dictionary.dart';
 
 /// 채움만 보는 스펙. 코어는 [coreGrid] 가 같은 스펙으로 먼저 깐다.
 LevelSpec testSpec(List<TierQuota> fillQuotas, {int backtrackBudget = 200}) =>

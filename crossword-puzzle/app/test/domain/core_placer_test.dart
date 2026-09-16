@@ -9,7 +9,7 @@ import 'package:jgame/domain/model/level_spec.dart';
 import 'package:jgame/domain/model/puzzle.dart';
 import 'package:jgame/domain/model/word_entry.dart';
 
-import 'fixtures/dummy_dictionary.dart';
+import 'package:jgame/domain/fixtures/dummy_dictionary.dart';
 
 /// 코어 배치만 보는 최소 스펙. 채움 할당량(01-06)은 이 문서 범위 밖이라 비운다.
 LevelSpec testSpec({

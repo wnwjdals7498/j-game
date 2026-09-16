@@ -5,7 +5,7 @@ import 'package:jgame/domain/generator/grid_rules.dart';
 import 'package:jgame/domain/generator/slot_enumerator.dart';
 import 'package:jgame/domain/model/puzzle.dart';
 
-import 'fixtures/dummy_dictionary.dart';
+import 'package:jgame/domain/fixtures/dummy_dictionary.dart';
 
 /// 테스트용 PlacedWord 생성기. 기본값은 코어·티어1.
 PlacedWord pw(

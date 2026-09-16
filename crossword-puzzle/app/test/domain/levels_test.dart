@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 import 'package:jgame/domain/generator/grid_generator.dart';
 import 'package:jgame/domain/levels.dart';
 
-import 'fixtures/dummy_dictionary.dart';
+import 'package:jgame/domain/fixtures/dummy_dictionary.dart';
 
 void main() {
   test('id가 1..N 연속·유일', () {

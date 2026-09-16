@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 
-import 'fixtures/dummy_dictionary.dart';
+import 'package:jgame/domain/fixtures/dummy_dictionary.dart';
 
 void main() {
   final repo = InMemoryWordRepository(buildDummyDictionary(seed: 1));

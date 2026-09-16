@@ -6,7 +6,7 @@ import 'package:jgame/domain/model/puzzle.dart';
 import 'package:jgame/domain/model/submit_result.dart';
 import 'package:jgame/domain/scoring/scorer.dart';
 
-import 'fixtures/dummy_dictionary.dart';
+import 'package:jgame/domain/fixtures/dummy_dictionary.dart';
 
 /// 채점 대상 퍼즐을 뽑는 스펙. `levels.dart` 는 01-09 산출물이라 아직 없으므로
 /// 01-04·01-06·01-07 테스트와 같이 여기서 만든다(더미 사전 7×7 기준).

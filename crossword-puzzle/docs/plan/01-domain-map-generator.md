@@ -22,29 +22,54 @@ REVIEW.md 5절 결정을 `docs/DESIGN.md` 5절에 옮겨 적는다.
 
 모델 4종 시그니처는 [01-01.domain-models.md](01-01.domain-models.md) 에서 확정됐다(구현 완료).
 
+아래는 **실제 코드와 맞춘 최종 구조**다 (01-10 DoD 5번으로 갱신).
+
 ```
 domain/
 ├─ model/
 │  ├─ word_entry.dart      WordEntry{headword, syllables, tier, pos} · ==/hashCode는 headword 기준
+│  │                       생성자는 {headword, tier, pos} 만 받고 syllables는 split('') 로 파생
 │  ├─ level_spec.dart      TierQuota{tier,min,max}(+.exact) · LevelSpec{id,name,width,height,
 │  │                       coreTier,coreCount,fillQuotas,maxAttempts=20,backtrackBudget=200,
-│  │                       allowIsolated=true}
+│  │                       allowIsolated=true} · minFillCount/maxFillCount/minWordCount
 │  ├─ puzzle.dart          Direction{across,down} · PlacedWord{headword,row,col,dir,isCore,tier}
 │  │                       · Cell.blocked()/Cell.filled(s) · Puzzle{levelId,width,height,cells,
 │  │                       words,seed,attempts} · GenerationFailed
-│  └─ submit_result.dart   WordOutcome{correct,wrong,blank} · WordResult{word,entered,outcome}
-│                          · SubmitResult{results,isFirstSubmit} → score = correct - wrong
+│  └─ submit_result.dart   WordOutcome{correct,wrong,blank} · WordResult(word,entered,outcome)
+│                          · SubmitResult(results,{isFirstSubmit}) → score = correct - wrong
 ├─ repository/
 │  └─ word_repository.dart 추상 인터페이스 (아래)
 ├─ generator/
-│  ├─ grid_generator.dart  Puzzle generate(LevelSpec, WordRepository, int seed)
-│  ├─ core_placer.dart     코어 교차 배치
-│  ├─ filler.dart          빈 슬롯 채움
-│  └─ grid_rules.dart      인접·연속·연결성 검증
+│  ├─ grid.dart            MutableGrid — 생성 중에만 쓰는 가변 격자. place/unplace/toPuzzle
+│  ├─ grid_rules.dart      GridRules.canPlace / validate / components
+│  ├─ core_placer.dart     CorePlacer.place(MutableGrid, LevelSpec, List<WordEntry>, Random)
+│  │                       → CorePlaceResult? (실패 null)
+│  ├─ slot_enumerator.dart Slot · SlotEnumerator.enumerate / compareByConstraint
+│  ├─ filler.dart          Filler(grid, spec, repo, rnd).run() → FillStats
+│  └─ grid_generator.dart  GridGenerator(WordRepository)
+│                          · Future<Puzzle> generate(LevelSpec, int seed)  — 실패 시 예외
+│                          · Future<GenerationOutcome> tryGenerate(LevelSpec, int seed)
+│                          · GenerationStats{attempts,totalBacktracks,totalQueries,
+│                            elapsed,success,failReason}
 ├─ scoring/
-│  └─ scorer.dart          SubmitResult score(Puzzle, Map<cell, String> answers)
-└─ levels.dart             const List<LevelSpec>
+│  └─ scorer.dart          typedef Answers = Map<(int,int), String>
+│                          Scorer.score(Puzzle, Answers, {required bool isFirstSubmit})
+├─ measure/
+│  └─ measure_runner.dart  LevelMeasurement · MeasureRunner(repo).measureLevel/measureAll
+│                          · renderMarkdown(...) · failingMeasurements(...)   (01-10)
+├─ fixtures/
+│  └─ dummy_dictionary.dart InMemoryWordRepository · buildDummyDictionary  (01-02, 01-10에 이동)
+└─ levels.dart             const List<LevelSpec> levels · LevelSpec levelById(int)
 ```
+
+실제와 다르게 적혀 있던 것 두 가지를 고쳤다.
+
+- `generate` 는 `WordRepository` 를 인자로 받지 않는다. 생성자에서 한 번 받고
+  `generate(spec, seed)` 만 호출한다. 예외 없는 판을 원하면 `tryGenerate` 다(01-10 하네스용).
+- `grid.dart` · `slot_enumerator.dart` · `measure/` · `fixtures/` 가 트리에 빠져 있었다.
+
+`generate` 와 `tryGenerate` 는 둘 다 `Future` 다. 실 DB 질의가 비동기라 위에서 아래까지
+`async` 로 내려간다.
 
 `WordRepository` 인터페이스 (3단계가 구현):
 

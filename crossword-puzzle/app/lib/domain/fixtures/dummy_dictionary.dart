@@ -1,7 +1,11 @@
 import 'dart:math';
 
-import 'package:jgame/domain/model/word_entry.dart';
-import 'package:jgame/domain/repository/word_repository.dart';
+import '../model/word_entry.dart';
+import '../repository/word_repository.dart';
+
+// 01-02에서 test/domain/fixtures/ 에 두었던 파일을 01-10에서 여기로 옮겼다.
+// tool/measure.dart 와 테스트 양쪽이 써야 하기 때문이다.
+// 여전히 domain/ 규칙을 지킨다: 플랫폼 import 금지.
 
 /// 메모리 기반 WordRepository. 정렬은 headword 사전순으로 고정(결정성).
 class InMemoryWordRepository implements WordRepository {

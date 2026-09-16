@@ -6,7 +6,7 @@ import 'package:jgame/domain/generator/grid_rules.dart';
 import 'package:jgame/domain/model/level_spec.dart';
 import 'package:jgame/domain/model/puzzle.dart';
 
-import 'fixtures/dummy_dictionary.dart';
+import 'package:jgame/domain/fixtures/dummy_dictionary.dart';
 
 /// 생성기 전체를 도는 스펙. `levels.dart` 는 01-09 산출물이라 아직 없으므로
 /// 01-04·01-06 테스트와 같이 여기서 만든다(더미 사전 7×7 기준).
