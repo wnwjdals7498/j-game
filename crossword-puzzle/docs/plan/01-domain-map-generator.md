@@ -53,7 +53,7 @@ abstract class WordRepository {
   /// 패턴 질의. fixed = {자리index: 음절}. 예: length 3, {1: '가'} → ?가?
   Future<List<WordEntry>> findByPattern({
     required int length,
-    required Set<int> tiers,
+    Set<int> tiers = const {}, // 비면 전체 티어
     Map<int, String> fixed = const {},
     Set<String> exclude = const {},
     int limit = 50,
