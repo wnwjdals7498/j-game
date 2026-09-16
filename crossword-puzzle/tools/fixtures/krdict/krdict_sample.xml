@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  한국어기초사전 구조를 흉내 낸 손수 만든 샘플 (02-01, 승인 대기 중 대체물).
+  실데이터가 아니다. 뜻풀이·예문 텍스트는 전부 창작이다.
+  구조 근거: docs/plan/02-03.parse-krdict.md 의 파서 골격.
+  예문(example_info)·발음(pronunciation_info)·이미지(multimedia_info) 는
+  라이선스 비개방 항목이라 파서가 버려야 한다. 테스트가 실제로 막는지 보려고 일부러 넣었다.
+-->
+<channel>
+  <title>한국어기초사전</title>
+  <total>20</total>
+
+  <!-- 1. 동형어 01 · 뜻풀이 2개 · 유의어 · 버려야 할 필드 전부 포함 -->
+  <item>
+    <word_info>
+      <word>가다01</word>
+      <homonym_num>01</homonym_num>
+      <pos>동사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pronunciation_info>
+        <pronunciation>가다</pronunciation>
+        <link>https://krdict.example/sound/00012345.mp3</link>
+      </pronunciation_info>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>12345</sense_code>
+            <definition>한 곳에서 다른 곳으로 장소를 이동하다.</definition>
+            <example_info>
+              <type>문장</type>
+              <example>동생이 학교에 간다.</example>
+            </example_info>
+            <rel_info>
+              <type>비슷한말</type>
+              <word>이동하다</word>
+            </rel_info>
+            <rel_info>
+              <type>비슷한말</type>
+              <word>향하다</word>
+            </rel_info>
+            <rel_info>
+              <type>반대말</type>
+              <word>오다</word>
+            </rel_info>
+            <multimedia_info>
+              <type>사진</type>
+              <link>https://krdict.example/image/00012345.jpg</link>
+            </multimedia_info>
+          </sense_info>
+          <sense_info>
+            <sense_code>12346</sense_code>
+            <definition>일정한 목적을 위하여 어디에 참석하다.</definition>
+            <example_info>
+              <type>문장</type>
+              <example>결혼식에 가다.</example>
+            </example_info>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 2. 같은 표제어의 동형어 02 -->
+  <item>
+    <word_info>
+      <word>가다02</word>
+      <homonym_num>02</homonym_num>
+      <pos>동사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>12350</sense_code>
+            <definition>금이나 줄이 생기다.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 3. 표준 명사 · 유의어 있음 -->
+  <item>
+    <word_info>
+      <word>사람</word>
+      <pos>명사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pronunciation_info>
+        <pronunciation>사람</pronunciation>
+        <link>https://krdict.example/sound/00020001.mp3</link>
+      </pronunciation_info>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20001</sense_code>
+            <definition>생각을 하고 말을 하며 도구를 만들어 쓰는 동물.</definition>
+            <example_info>
+              <type>문장</type>
+              <example>사람은 누구나 실수를 한다.</example>
+            </example_info>
+            <rel_info>
+              <type>비슷한말</type>
+              <word>인간</word>
+            </rel_info>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 4. 유의어 없음 (rel_info 자체가 없음) -->
+  <item>
+    <word_info>
+      <word>나무</word>
+      <pos>명사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20002</sense_code>
+            <definition>단단한 줄기를 가지고 여러 해 동안 자라는 식물.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 5 -->
+  <item>
+    <word_info>
+      <word>학교</word>
+      <pos>명사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20003</sense_code>
+            <definition>일정한 목적과 계획에 따라 학생을 가르치는 기관.</definition>
+            <rel_info>
+              <type>비슷한말</type>
+              <word>배움터</word>
+            </rel_info>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 6. 동형어 01 (과일) -->
+  <item>
+    <word_info>
+      <word>사과01</word>
+      <homonym_num>01</homonym_num>
+      <pos>명사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20004</sense_code>
+            <definition>둥글고 붉으며 단맛이 나는 과일.</definition>
+            <multimedia_info>
+              <type>사진</type>
+              <link>https://krdict.example/image/00020004.png</link>
+            </multimedia_info>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 7. 동형어 02 (용서를 빎) — 정규화 후 6번과 같은 표제어가 된다 -->
+  <item>
+    <word_info>
+      <word>사과02</word>
+      <homonym_num>02</homonym_num>
+      <pos>명사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20005</sense_code>
+            <definition>잘못에 대하여 용서를 빎.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 8. 3음절 -->
+  <item>
+    <word_info>
+      <word>어머니</word>
+      <pos>명사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20006</sense_code>
+            <definition>자기를 낳아 준 여자를 이르는 말.</definition>
+            <rel_info>
+              <type>비슷한말</type>
+              <word>모친</word>
+            </rel_info>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 9. 3음절 -->
+  <item>
+    <word_info>
+      <word>도서관</word>
+      <pos>명사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20007</sense_code>
+            <definition>책을 모아 두고 사람들이 읽거나 빌릴 수 있게 한 시설.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 10. 4음절 -->
+  <item>
+    <word_info>
+      <word>김치찌개</word>
+      <pos>명사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20008</sense_code>
+            <definition>김치를 넣고 끓인 찌개.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 11. 형용사 — 02-06 품사 필터가 걸러야 한다 -->
+  <item>
+    <word_info>
+      <word>예쁘다</word>
+      <pos>형용사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20009</sense_code>
+            <definition>생긴 모양이 보기 좋고 곱다.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 12. 부사 -->
+  <item>
+    <word_info>
+      <word>빨리</word>
+      <pos>부사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20010</sense_code>
+            <definition>걸리는 시간이 짧게.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 13. 고유명사 — 제외 대상 (config.EXCLUDE_PROPER_NOUN) -->
+  <item>
+    <word_info>
+      <word>대한민국</word>
+      <pos>명사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>고유명사</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20011</sense_code>
+            <definition>동아시아의 한반도 남쪽에 있는 나라.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 14. 1음절 — 격자 교차 불가로 제외 (config.MIN_LEN) -->
+  <item>
+    <word_info>
+      <word>물</word>
+      <pos>명사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20012</sense_code>
+            <definition>강, 호수, 바다 등에 있으며 빛깔과 냄새가 없는 액체.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 15. 6음절 — 격자에 안 들어가므로 제외 (config.MAX_LEN) -->
+  <item>
+    <word_info>
+      <word>국제연합기구</word>
+      <pos>명사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20013</sense_code>
+            <definition>여러 나라가 모여 만든 국제적인 조직.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 16. 비한글 포함 — 제외 (완성형 범위 밖) -->
+  <item>
+    <word_info>
+      <word>PC방</word>
+      <pos>명사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20014</sense_code>
+            <definition>컴퓨터를 이용할 수 있게 해 주고 돈을 받는 가게.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 17. 띄어쓰기 포함 구 — 제외 (word_unit 구) -->
+  <item>
+    <word_info>
+      <word>가게 주인</word>
+      <pos>명사</pos>
+      <word_unit>구</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20015</sense_code>
+            <definition>가게를 운영하는 사람.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 18. 속담 — 제외 -->
+  <item>
+    <word_info>
+      <word>발 없는 말이 천 리 간다</word>
+      <pos>품사 없음</pos>
+      <word_unit>속담</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20016</sense_code>
+            <definition>말은 비록 발이 없지만 순식간에 멀리 퍼진다는 뜻.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 19. 관용구 — 제외 -->
+  <item>
+    <word_info>
+      <word>미역국을 먹다</word>
+      <pos>품사 없음</pos>
+      <word_unit>관용구</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20017</sense_code>
+            <definition>시험에서 떨어지다.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+  <!-- 20. 표제어가 비어 있는 항목 — 파서가 행을 내지 않아야 한다 -->
+  <item>
+    <word_info>
+      <word></word>
+      <pos>명사</pos>
+      <word_unit>단어</word_unit>
+      <word_type>일반어</word_type>
+      <pos_info>
+        <comm_pattern_info>
+          <sense_info>
+            <sense_code>20018</sense_code>
+            <definition>표제어가 비어 있는 깨진 항목.</definition>
+          </sense_info>
+        </comm_pattern_info>
+      </pos_info>
+    </word_info>
+  </item>
+
+</channel>
