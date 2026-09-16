@@ -14,10 +14,8 @@ def test_cli_requires_subcommand():
     with pytest.raises(SystemExit):
         cli.main([])
 
-def test_report_stub_raises():
-    # build 파이프라인 8단계(02-03~02-09)는 전부 구현됐다.
-    # 아직 스텁인 건 report/check(02-10) 뿐이라 대상을 그쪽으로 옮긴다.
-    with pytest.raises(NotImplementedError):
-        cli.main(["report"])
-    with pytest.raises(NotImplementedError):
-        cli.main(["check"])
+def test_no_stubs_left(tmp_path, monkeypatch):
+    # 02-03~02-09 의 build 8단계에 이어 report/check(02-10)까지 구현됐다.
+    # `check` 는 종료 코드를 내는 게 계약이다 — DB 가 없으면 1 (CI, 06-06).
+    monkeypatch.setattr(config, "BUILD", tmp_path)
+    assert cli.main(["check"]) == 1

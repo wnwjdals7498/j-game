@@ -33,6 +33,11 @@ NO_FREQ_BASE = 1.0               # 빈도 정보 없음 = 가장 어려움
 SRC_KRDICT = 1
 SRC_STDICT = 2
 
+# --- 산출물 검사 (02-10 `python -m tools check` 표) ---
+CHECK_MIN_WORDS = 1000            # 이보다 적으면 게임에 쓸 수 없다
+CHECK_TIER_TOLERANCE_PP = 2       # 티어 실제 비율과 TIER_RATIO 의 허용 오차 (%p)
+CHECK_MIN_FREQ_MATCH_PCT = 30     # 빈도 매칭률 기준 (리포트 요약의 판정)
+
 # --- 메타 ---
 SCHEMA_VERSION = 1
 DB_VERSION = 1        # 갱신할 때마다 +1 (05-01 manifest 비교 키)
