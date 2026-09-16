@@ -20,13 +20,20 @@ REVIEW.md 5절 결정을 `docs/DESIGN.md` 5절에 옮겨 적는다.
 
 `app/lib/domain/` 아래. 플랫폼 import(`dart:io`, `flutter/*`, drift) 금지.
 
+모델 4종 시그니처는 [01-01.domain-models.md](01-01.domain-models.md) 에서 확정됐다(구현 완료).
+
 ```
 domain/
 ├─ model/
-│  ├─ word_entry.dart      표제어, 음절 리스트, tier, pos
-│  ├─ level_spec.dart      격자 W×H, 코어 (tier, count), 채움 [(tier, count)], 시도 예산
-│  ├─ puzzle.dart          Cell 격자, List<PlacedWord>(위치·방향·isCore), seed
-│  └─ submit_result.dart   단어별 정답/오답/빈칸, 총점
+│  ├─ word_entry.dart      WordEntry{headword, syllables, tier, pos} · ==/hashCode는 headword 기준
+│  ├─ level_spec.dart      TierQuota{tier,min,max}(+.exact) · LevelSpec{id,name,width,height,
+│  │                       coreTier,coreCount,fillQuotas,maxAttempts=20,backtrackBudget=200,
+│  │                       allowIsolated=true}
+│  ├─ puzzle.dart          Direction{across,down} · PlacedWord{headword,row,col,dir,isCore,tier}
+│  │                       · Cell.blocked()/Cell.filled(s) · Puzzle{levelId,width,height,cells,
+│  │                       words,seed,attempts} · GenerationFailed
+│  └─ submit_result.dart   WordOutcome{correct,wrong,blank} · WordResult{word,entered,outcome}
+│                          · SubmitResult{results,isFirstSubmit} → score = correct - wrong
 ├─ repository/
 │  └─ word_repository.dart 추상 인터페이스 (아래)
 ├─ generator/
