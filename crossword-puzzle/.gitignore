@@ -17,3 +17,6 @@ app/android/key.properties
 Thumbs.db
 .idea/
 *.iml
+
+# oh-my-claudecode 플러그인 상태
+.omc/
