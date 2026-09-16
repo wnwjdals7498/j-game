@@ -170,6 +170,34 @@ stdict: {'total': 20, 'kept': 12, 'drop_dialect': 2, 'drop_old': 4, 'drop_techni
 | 행 수 | 헤더 제외 100 (샘플). 실데이터 약 6만 예상 |
 | 품사 값 | `명사`(81) `동사`(5) `의존명사`(4) `형용사`(4) `부사`(3) `대명사`(2) `관형사`(1) |
 
+#### 파싱 실적 (02-05)
+
+| 입력 | 읽은 행 | 출력 행 | 판별된 인코딩 | 소요 시간 |
+|---|---|---|---|---|
+| 샘플 `tools/fixtures/freq_sample.csv` | 100 | 99 | **`utf-8-sig`** | 0.0s |
+| 실데이터 `tools/raw/*freq*.csv` | **미측정 — 승인 대기** (약 6만 예상) | — | — | — |
+
+명령: `tools\.venv\Scripts\python.exe -m tools build --only parse_freq --fixtures`
+
+```
+freq: freq_sample.csv 인코딩=utf-8-sig
+freq: {'files': 1, 'read': 100, 'drop_no_word': 0, 'drop_dup': 1, 'kept': 99}
+```
+
+100행 → 99행: `사람` 이 `명사`(순위 1)·`의존명사`(순위 100) 2행이라 **순위 1만 남았다**
+(`drop_dup: 1`). 표제어 문자열이 `word` 의 PK 이고(DESIGN 4절), 높은 순위를 남기는 쪽이
+난이도상 보수적(= 쉽게 보는) 선택이다 — 근거는 `parse_freq._best_by_headword` 주석에 있다.
+
+**인코딩 판별**은 `io_util.detect_csv_encoding` 이 `utf-8-sig → cp949 → euc-kr` 순으로 시도하고
+성공한 값을 위처럼 로그에 찍는다. `cp949`/`euc-kr` 은 아무 바이트열이나 디코드해 버리므로
+UTF-8 을 반드시 먼저 본다. 또 **파일 전체**를 흘려 읽어 검사한다 — 앞부분만 보면
+ASCII 로 시작하는 CP949 파일이 UTF-8 로 "성공" 한 뒤 뒤쪽 한글에서 조용히 깨진다.
+실데이터가 도착하면 로그의 `인코딩=` 값을 위 표와 3·4절 "인코딩" 칸에 옮겨 적는다.
+
+샘플에는 **순위 컬럼이 있어** 직접 부여 경로를 타지 않는다. 그 경로(`_assign_ranks`:
+`빈도` 내림차순, 동률은 같은 순위)는 `test_parse_freq.py` 의
+`test_assigns_rank_when_column_missing` · `test_ties_get_same_rank` 가 tmp csv 로 검증한다.
+
 ### 4. 한국어 학습용 어휘 목록 (샘플: `tools/fixtures/vocab_sample.csv`)
 
 | 질문 | 조사 결과 |
@@ -182,6 +210,27 @@ stdict: {'total': 20, 'kept': 12, 'drop_dialect': 2, 'drop_old': 4, 'drop_techni
 | 미매칭 등급 | 샘플에 `등급 없음`(1행) 을 일부러 넣었다 → **조용히 버리지 말고 개수를 로그에 찍는 경로** 확인용 |
 | 행 수 | 헤더 제외 50 (샘플). 실데이터 5,965 예상 |
 | 품사 값 | `명사`(49) `형용사`(1) |
+
+#### 파싱 실적 (02-05)
+
+| 입력 | 읽은 행 | 출력 행 | 판별된 인코딩 | 소요 시간 |
+|---|---|---|---|---|
+| 샘플 `tools/fixtures/vocab_sample.csv` | 50 | 49 | **`utf-8-sig`** | 0.0s |
+| 실데이터 `tools/raw/*vocab*.csv` | **미측정 — 승인 대기** (5,965 예상) | — | — | — |
+
+명령: `tools\.venv\Scripts\python.exe -m tools build --only parse_vocab --fixtures`
+
+```
+vocab: vocab_sample.csv 인코딩=utf-8-sig
+vocab: {'files': 1, 'read': 50, 'drop_no_word': 0, 'drop_unmapped_grade': 1, 'drop_dup': 0, 'kept': 49}
+vocab: 미매칭 등급 1건 -> {'등급 없음': 1} (GRADE_MAP 에 추가할지 02-01 로 확인)
+```
+
+등급 매핑 표는 `parse_vocab.GRADE_MAP` 에 명시돼 있다 (`초급→A` `중급→B` `고급→C`,
+그리고 이미 `A`/`B`/`C` 인 원본을 위한 항등 매핑). 출력 분포: `A` 25 · `B` 20 · `C` 4.
+**매핑에 없는 값은 조용히 버리지 않는다** — 개수(`drop_unmapped_grade`)와 실제 값을
+위처럼 로그에 찍는다. 샘플의 `등급 없음`(`예쁘다`) 1행이 그 경로의 회귀 케이스다.
+실데이터 등급 표기가 `1급/2급/...` 이면 02-01 로 돌아가 값을 전수 조사한 뒤 `GRADE_MAP` 에 더한다.
 
 ### hwp/xlsx → csv 변환 절차
 
@@ -208,6 +257,14 @@ stdict: {'total': 20, 'kept': 12, 'drop_dialect': 2, 'drop_old': 4, 'drop_techni
   02-03 출력 스키마에 필드를 더할지, 파서에서 바로 거를지를 **02-03/02-06 문서에 먼저 반영**한다.
   샘플로 진행하는 동안에는 `대한민국` 항목이 이 판정의 회귀 케이스다.
 - **csv 실제 인코딩** (CP949 예상). 판별에 성공한 인코딩을 위 표에 기록한다.
+  (샘플은 `utf-8-sig`. 실데이터 로그의 `인코딩=` 값으로 3·4절 표를 덮어쓴다.)
+- **학습용 어휘의 중복 표제어 규칙.** 02-05 "중복 표제어 처리"는 **빈도**에 대해서만
+  "가장 높은 순위만 남긴다(= 쉽게 보는 쪽)"를 정했고, 어휘 목록의 중복은 언급이 없다.
+  샘플 50행에는 중복이 없다(`drop_dup: 0`). 구현은 같은 방향으로
+  **가장 쉬운 등급(A<B<C)만 남기도록** 했다 (`parse_vocab._best_by_headword`) —
+  표제어가 `word` 의 PK 라서(DESIGN 4절) 무언가는 골라야 하기 때문이다.
+  실데이터에 중복이 실제로 있는지 확인하고, 있으면 **02-05 문서에 규칙을 명시**한다.
+  회귀 케이스는 `test_duplicate_headword_keeps_easiest_grade` (tmp csv).
 - **표준국어대사전 승인 여부.** 거부·지연되면 빈 파일로 진행한다 (02-04 골격이 이미 허용).
 - **02-04 문서 내부 불일치 — `가게^주인`.** 02-04 "표준 고유 필터" 표와 DoD 는
   `word_unit in {구, 속담, 관용구}` 를 **파싱 단계에서 버리라**고 하는데,
