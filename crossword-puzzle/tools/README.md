@@ -683,7 +683,7 @@ DoD 의 "테스트 12종" 과도 수가 맞는다.
 
 ```
     report: docs/reports/02-db-report.md
-  - 샘플 빌드(origin=fixtures): 규모 검사(단어 수·티어 분포) 건너뜀 — tools/README.md 02-10 참조
+  - 샘플 빌드(origin=fixtures): 규모 검사(단어 수·티어 분포) 건너뜀 ― tools/README.md 02-10 참조
 check: OK
 ```
 
@@ -756,8 +756,11 @@ tools\.venv\Scripts\python.exe -m tools check
 tools\.venv\Scripts\python.exe -m pytest tools -q
 ```
 
-`test_report.py` **10개** — 02-10 "테스트" 절 표 6행(리포트 렌더 · 샘플 재현성 ·
+`test_report.py` **11개** — 02-10 "테스트" 절 표 6행(리포트 렌더 · 샘플 재현성 ·
 check 통과 · 티어 8 · 비한글 표제어 · `word_stat` 행)에, 규모 검사 양방향 2개와
-DB 부재 시 `check`/`render` 동작 2개를 더한 것이다. `test_cli.py` 의 "아직 스텁"
+DB 부재 시 `check`/`render` 동작 2개, 그리고 `check` 출력이 전부 cp949 로 인코딩되는지
+보는 회귀 1개를 더한 것이다. 마지막 것은 실제로 한 번 터졌던 자리다 — `—`(U+2014) 가
+cp949 에 없어서 `python -m tools check` 가 cp949 콘솔에서 `UnicodeEncodeError` 로
+죽고 종료 코드 1 을 냈다. CI(06-06)가 정확히 이 경로를 탄다. `test_cli.py` 의 "아직 스텁"
 테스트는 지웠다 — 이제 `build`·`report`·`check` 세 명령이 전부 구현됐고, 대신
 `check` 가 DB 없을 때 종료 코드 1 을 내는지 본다.

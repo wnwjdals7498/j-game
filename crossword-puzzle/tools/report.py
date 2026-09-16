@@ -306,8 +306,11 @@ def _problems(con: sqlite3.Connection, db: Path) -> list[str]:
     # 건너뛰는 조건은 DB 안 `meta.source_versions.origin == "fixtures"` 뿐이라
     # 실데이터 빌드(CI, 06-06)에서는 언제나 검사한다.
     if _is_fixture(meta):
+        # 대시는 `—`(U+2014) 가 아니라 `―`(U+2015) 다. U+2014 는 cp949 에 없어서 CI(06-06)
+        # 처럼 콘솔이 cp949 인 곳에서 이 print 가 UnicodeEncodeError 로 죽는다
+        # (`_report_problems` 가 `✗` 대신 `×` 를 쓰는 것과 같은 이유).
         print("  - 샘플 빌드(origin=fixtures): 규모 검사(단어 수·티어 분포) 건너뜀"
-              " — tools/README.md 02-10 참조")
+              " ― tools/README.md 02-10 참조")
     else:
         if total < config.CHECK_MIN_WORDS:
             out.append(f"단어 수 {total:,} < {config.CHECK_MIN_WORDS:,}")

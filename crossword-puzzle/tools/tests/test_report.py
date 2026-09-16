@@ -156,6 +156,24 @@ def test_check_reports_missing_db(tmp_path, monkeypatch):
     assert report.check() is False
 
 
+def test_check_output_encodes_to_cp949(tmp_path, monkeypatch, capsys):
+    """check 가 찍는 글자는 전부 cp949 에 있어야 한다.
+
+    CI(06-06)가 `python -m tools check` 를 cp949 콘솔에서 돌린다. 여기 벗어난 글자가
+    하나라도 섞이면 stdout 이 UnicodeEncodeError 로 죽어 종료 코드가 1 이 된다
+    (`—` U+2014 로 실제 터졌던 자리 — `―` U+2015 나 `×` 처럼 cp949 에 있는 글자만 쓴다).
+    통과 경로(샘플 빌드의 건너뜀 안내)와 실패 경로(문제 목록)를 둘 다 훑는다.
+    """
+    ok_db = _build(tmp_path / "ok", monkeypatch, _rows(16), use_fixtures=True)
+    assert report.check(db=ok_db) is True
+    bad_db = _build(tmp_path / "bad", monkeypatch, _rows(16))
+    assert report.check(db=bad_db) is False
+
+    out = capsys.readouterr().out
+    assert out.strip(), "check 가 아무것도 찍지 않았다"
+    out.encode("cp949")      # 실패하면 UnicodeEncodeError 로 이 테스트가 깨진다
+
+
 def test_render_requires_db(tmp_path, monkeypatch):
     """DB 가 없으면 리포트는 빈 문서를 내지 않고 멈춘다."""
     monkeypatch.setattr(config, "BUILD", tmp_path)
