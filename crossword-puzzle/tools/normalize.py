@@ -6,20 +6,20 @@
 정규화는 **버리기 전에 고칠 수 있는 것만** 고친다 (NFC · 앞뒤 공백 · 동형어 번호 · 첨자).
 띄어쓰기/`^`/하이픈은 고치지 않는다 — 그건 다른 단어로 바꾸는 것이라 그냥 버린다 (F1).
 """
-import re
 import unicodedata
 from collections import Counter
 
 from . import config, io_util
+# 정규화·완성형 검사의 본체는 `hangul.py` 에 있다 (02-08: "02-06/02-07이 쓰는 정규화
+# 함수도 여기로 모은다"). 02-06 이 정한 공개 이름은 그대로 두려고 여기서 다시 내보낸다.
+# `4H`, `3D` 같은 표제어는 어차피 F1(완성형 검사)에서 탈락한다.
+from .hangul import is_all_hangul, is_hangul_syllable, normalize_headword
 
 OUT = "normalized.jsonl"
 IN = ["entries.krdict.jsonl", "entries.stdict.jsonl"]
 
-# 동형어 번호는 표제어 끝의 숫자다 (`가다01` -> `가다`). 02-03/02-04 의 `homonym` 필드가
-# 동형어의 정체를 말해 주는 정본이고, 여기서는 **표제어에 붙어 있을 때만** 잘라낸다 (02-06).
-# `4H`, `3D` 같은 표제어는 어차피 F1(완성형 검사)에서 탈락한다.
-_HOMONYM = re.compile(r"\d+$")
-_SUPERSCRIPT = str.maketrans("", "", "¹²³⁴⁵⁶⁷⁸⁹⁰")
+__all__ = ["OUT", "IN", "REASONS", "check", "run",
+           "normalize_headword", "is_hangul_syllable", "is_all_hangul"]
 
 # 로그 라벨. 코드(F1~F5)는 02-06 문서·README·테스트가 그대로 쓰는 이름이라 바꾸지 않는다.
 REASONS = {
@@ -35,26 +35,6 @@ def _pad(label: str, width: int = 14) -> str:
     """한글은 콘솔에서 두 칸을 먹는다. 사유별 개수를 세로로 비교하려면 표시폭으로 맞춰야 한다."""
     w = sum(2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in label)
     return label + " " * max(0, width - w)
-
-
-def normalize_headword(raw: str) -> str:
-    """NFC -> 앞뒤 공백 -> 첨자 제거 -> 동형어 번호 제거.
-
-    첨자를 동형어 번호보다 먼저 지운다. `¹` 은 유니코드 No 범주라 `\\d` 에 걸리지 않아
-    순서를 바꾸면 `가다¹` 이 안 고쳐진다.
-    """
-    s = unicodedata.normalize("NFC", raw).strip()
-    s = s.translate(_SUPERSCRIPT)
-    s = _HOMONYM.sub("", s)
-    return s.strip()
-
-
-def is_hangul_syllable(ch: str) -> bool:
-    return config.HANGUL_START <= ord(ch) <= config.HANGUL_END
-
-
-def is_all_hangul(s: str) -> bool:
-    return bool(s) and all(is_hangul_syllable(c) for c in s)
 
 
 def check(entry: dict) -> str | None:

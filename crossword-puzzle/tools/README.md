@@ -434,3 +434,118 @@ Get-Content tools/build/merged.jsonl -TotalCount 3 -Encoding UTF8
 표준 보충 · `source` 비트 · 뜻풀이 컷 · 유의어 수집 · 유의어 중복 제거 · 빈도 결합 ·
 등급 결합 · 출력 바이트 안정 · 표준 없음) 전부 + `freq`/`vocab` **파일 자체 부재** ·
 매칭률 경고 · 픽스처 end-to-end 20→16.
+
+---
+
+## 난이도 점수 · 7티어 (02-08)
+
+> ⚠ 아래 숫자는 전부 **손수 만든 샘플 16표제어 기반**이다 (실데이터 아님, 00-01 승인 대기).
+
+`tools/score.py` — `build/merged.jsonl` → `build/scored.jsonl` (`score`·`tier` 두 필드 추가).
+`tools/hangul.py` — 자모 분해·복잡 자모 판정. 산식·비율은
+[docs/plan/02-08.score-tier.md](../docs/plan/02-08.score-tier.md) 가 정한 것이고 그대로 구현했다.
+
+```
+base   = (rank - 1) / (max_rank - 1)      빈도 없음 -> NO_FREQ_BASE (1.0)
+adj    = ADJ_VOCAB[grade]                 A -0.15 / B -0.10 / C -0.05
+adj   += ADJ_IN_KRDICT (-0.10)            기초사전 등재
+adj   += ADJ_PER_EXTRA_SYLLABLE x (음절수 - 2)   (+0.03/음절)
+adj   += ADJ_COMPLEX_JAMO (+0.05)         겹받침·이중모음 포함
+score  = round(clamp(base + adj, 0, 1), 6)
+```
+
+조정 손잡이는 전부 `config.py` 에 있다. 산식을 바꿀 때는 merge 까지 다시 돌릴 필요 없이
+`python -m tools build --only score` 로 재실행한다 (02-08 "막히면").
+
+### 실적
+
+| 입력 | 읽은 행 | 출력 | 소요 시간 |
+|---|---|---|---|
+| 샘플 `merged.jsonl`(16) | 16 | **16** | 0.0s |
+| 실데이터 | **미측정 — 승인 대기** | — | — |
+
+명령: `tools\.venv\Scripts\python.exe -m tools build --only score --fixtures`
+
+```
+    score: 16 words
+      tier 1        4   25.0%
+      tier 2        4   25.0%
+      tier 3        2   12.5%
+      tier 4        3   18.8%
+      tier 5        1    6.2%
+      tier 6        1    6.2%
+      tier 7        1    6.2%
+```
+
+배정 결과 (점수 오름차순):
+
+| 티어 | 표제어 |
+|---|---|
+| 1 | 나무 · 사람 · 학교 (0.000000) · 어머니 (0.037732) |
+| 2 | 사과 · 하늘 · 바다 · 책상 |
+| 3 | 연필 · 도서관 |
+| 4 | 김치찌개 · 강아지 · 구름 |
+| 5 | 대한민국 |
+| 6 | 미분방정식 (빈도 없음 → 1.000000) |
+| 7 | 심근경색 (빈도 없음 → 1.000000) |
+
+6·7티어가 **빈도 조사에 없는 전문어**로 채워졌다. 02-08 "`base` 정규화" 주의가 말한
+정상 동작이다 — 빈도 조사에 안 나오는 단어는 실제로 어렵다. 실데이터에서 1.0 에 단어가
+대량으로 몰려 상위 티어가 전부 이런 단어면 `NO_FREQ_BASE` 를 0.85 로 낮춰 다른 신호와
+섞는다 (02-08 "막히면"). 판단은 **02-10 눈 검수**에서 한다.
+
+### 티어 비율 ±1% 는 16행에서 성립하지 않는다 (샘플 크기 한계)
+
+DoD 의 "`TIER_RATIO` 피라미드와 일치 (±1%)" 는 위 16행 로그에서 안 맞는다
+(25.0 / 25.0 / 12.5 / 18.8 / 6.2 / 6.2 / 6.2 vs 목표 25 / 22 / 18 / 14 / 10 / 7 / 4).
+**한 행이 6.25% 라서 산술적으로 ±1% 안에 들어갈 수가 없다** — 산식이나 `bounds` 의
+문제가 아니다. `bounds[-1] = n` 은 들어가 있고(02-08 "막히면" 점검 항목), 1000행을
+넣으면 250 / 220 / 180 / 140 / 100 / 70 / 40 으로 **정확히** 떨어진다.
+그래서 비율·피라미드 DoD 는 1000행 합성 입력으로 테스트에서 강제하고
+(`test_tier_ratio_matches_config` · `test_tier_distribution_is_pyramid`),
+16행 샘플 로그는 실적 기록으로만 남긴다. 실데이터가 도착하면 `--fixtures` 없이 한 번
+돌려 위 표의 둘째 행과 실제 티어 분포를 채운다.
+
+### 복잡 자모 — `사과` 는 복잡 단어다
+
+`hangul.COMPLEX_JUNG` 에 `ㅘ` 가 들어 있어 `사과` 의 `과` 가 이중모음으로 잡힌다.
+02-08 이 "의도한 동작" 이라고 못 박은 케이스이고, `test_simple_syllable` 이 회귀 케이스다.
+이중모음이 너무 흔해 패널티가 무의미해지면 `{"ㅙ","ㅚ","ㅞ","ㅟ","ㅢ"}` 로 좁히기로 돼 있는데,
+**이건 `config` 값이 아니라 `hangul.py` 코드**이므로 바꿀 때 그 파일에 결정을 주석으로 남긴다.
+16표제어 중 복잡 자모로 잡힌 건 `사과`(ㅘ)·`도서관`(ㅘ) 둘뿐이라 지금은 판단할 근거가
+없다. 02-10 눈 검수에서 실데이터 비율을 보고 정한다.
+
+`decompose` 는 완성형이 아니면 **ValueError 를 던진다**. 02-08 "막히면" 이 정한 대로
+여기서 try/except 로 덮지 않는다 — 비완성형이 도달했다면 02-06 의 F1 필터가 안 먹은 것이다.
+
+### `hangul.py` 로 모은 것
+
+02-08 이 `tools/hangul.py` 주석으로 "02-06/02-07이 쓰는 정규화 함수도 여기로 모은다" 고
+지시해서, `normalize_headword` · `is_hangul_syllable` · `is_all_hangul` 을 여기로 옮겼다.
+`normalize.py` 는 같은 이름으로 **다시 내보내기만** 한다 — 02-06 이 정한 공개 이름과
+`tools/tests/test_normalize.py` 의 import 를 그대로 유지하기 위해서다
+(`test_normalization_helpers_moved_here` 가 두 이름이 같은 객체인지 확인한다).
+
+### 출력 바이트 재현성
+
+`assign_tiers` 가 `(score, headword)` 로 정렬하므로 동점이어도 배정이 흔들리지 않고,
+`round(score, 6)` 이 부동소수 꼬리를 잘라 실행마다 파일이 달라지는 걸 막는다.
+회귀 케이스는 `test_ties_are_assigned_stably`(전원 동점 40행을 입력 순서 뒤집어 두 번 실행)와
+`test_score_is_rounded_to_six_places`. 실제로 `--only score --fixtures` 를 두 번 돌려
+`scored.jsonl` 이 바이트 단위로 같은 것을 확인했다.
+
+### 검증
+
+```powershell
+tools\.venv\Scripts\python.exe -m tools build --only score --fixtures
+tools\.venv\Scripts\python.exe -m pytest tools/tests/test_score.py tools/tests/test_hangul.py -q
+```
+
+`test_score.py` 12개 + `test_hangul.py` 7개 = **19개** (파라미터 전개 218건).
+02-08 "테스트" 표 15종 — 빈도 1위 base 0 · 빈도 없음 base 1.0 · 등급 A 보정 ·
+기초 등재 보정 · 음절 패널티 · 복잡 자모 패널티 · clamp · 티어 비율 · 피라미드 ·
+티어 범위 · 동점 안정 정렬 · 자모 분해 · 겹받침 판정 · 이중모음 판정 · 단순 음절 —
+을 전부 덮고, 여기에 비완성형 ValueError · 자모 표 길이 · `run()` 출력 스키마와 티어 로그 ·
+`round(,6)` 자릿수를 더했다.
+(02-08 DoD 는 "테스트 14종" 이라고 적었지만 같은 문서 "테스트" 표는 15행이다.
+표를 정본으로 보고 15종을 전부 구현했다 — 문서 자체가 해소한 불일치이지 임의 결정이 아니다.)

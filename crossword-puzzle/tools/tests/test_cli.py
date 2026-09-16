@@ -16,6 +16,7 @@ def test_cli_requires_subcommand():
 
 def test_build_stub_raises():
     # parse_krdict(02-03)·parse_stdict(02-04)·parse_freq/parse_vocab(02-05)·
-    # normalize(02-06)·merge(02-07) 은 구현됐다. 아직 스텁인 다음 단계로 대상만 옮긴다.
+    # normalize(02-06)·merge(02-07)·score(02-08) 은 구현됐다.
+    # 아직 스텁인 다음 단계로 대상만 옮긴다.
     with pytest.raises(NotImplementedError):
-        cli.main(["build", "--only", "score"])
+        cli.main(["build", "--only", "build_sqlite"])
