@@ -359,3 +359,78 @@ Get-Content tools/build/normalized.jsonl -TotalCount 5 -Encoding UTF8
 NFC 조합형 · F1 선행 · 출력 스키마(`len`/`syllables` 일치) · `raw_headword` 보존 ·
 통계 합(사유별 합 + 통과 == 입력) · **입력 파일 일부 부재** · 두 입력 병합 · 빈 입력 ·
 F5 경고 · JSONL UTF-8 · 픽스처 end-to-end 32→20.
+
+---
+
+## 표제어 결합 (02-07)
+
+> ⚠ 아래 숫자는 전부 **손수 만든 샘플 기반**이다 (실데이터 아님, 00-01 승인 대기).
+
+`tools/merge.py` — `build/normalized.jsonl` (+ `build/freq.jsonl` · `build/vocab.jsonl`)
+→ `build/merged.jsonl`. 규칙은 [docs/plan/02-07.merge.md](../docs/plan/02-07.merge.md) "결합 규칙" 표.
+
+뜻풀이 행 여러 개를 **표제어 문자열 하나에 `word` 1행 + `sense` 여러 행**으로 묶는다
+(DESIGN 4절 "게임이 쓰는 것과 사전이 주는 것을 분리"). 기초 우선 · 표준은 보충이고,
+앱에 싣는 뜻풀이는 `config.SENSES_PER_WORD`(=1) 개로 자른다 (DESIGN 6절 용량).
+**자르기 전에 유의어만 전부 모아** `senses[0].synonyms` 에 넣는다 — 2번 뜻풀이에만
+유의어가 있는 경우가 흔하기 때문이다 (02-07).
+
+### 실적
+
+| 입력 | 읽은 행 | 출력 표제어 | 소요 시간 |
+|---|---|---|---|
+| 샘플 `normalized.jsonl`(20) | 20 | **16** | 0.0s |
+| 실데이터 | **미측정 — 승인 대기** | — | — |
+
+명령: `tools\.venv\Scripts\python.exe -m tools build --only merge --fixtures`
+
+```
+    merge: 16 words
+      빈도 매칭       14 (87.5%)
+      등급 매칭       16 (100.0%)
+      기초사전만 6 / 표준만 8 / 양쪽 2
+```
+
+20행 → 16표제어: `사람`·`나무` 가 기초+표준 양쪽(`source: 3`), `사과` 가 동음이의어
+(`사과01`/`사과02` 2 sense → `word` 1행), `나무01` 이 표준에서 뜻풀이 2개다.
+빈도 미매칭 2건은 `심근경색`·`미분방정식`(빈도 샘플에 없는 전문어).
+
+**매칭률은 샘플 때문에 비현실적으로 높다.** 등급 100% 는 어휘 샘플 50행을
+`normalized` 에 남는 단어들로 채웠기 때문이고, 실데이터에서는 **10% 안팎이 정상**이다
+(02-07 "막히면": 등급 5% 미만이면 이상, 1% 미만이면 파일이 잘못된 것).
+빈도 쪽 판단 기준은 **30% 미만이면 표제어 형태가 안 맞는 것**(품사 태그·동형어 번호)이고,
+그때는 02-05 의 `parse_freq` 에 정규화를 넣어 다시 결합한다.
+두 기준은 `merge.MIN_FREQ_MATCH`/`MIN_VOCAB_MATCH` 로 코드에 박혀 있고,
+밑돌면 `run()` 이 **경고 한 줄을 반드시 찍는다** (조용히 넘어가지 않는다).
+회귀 케이스는 `test_low_match_rate_is_warned`.
+
+실데이터가 도착하면 `--fixtures` 없이 한 번 돌려 위 표의 둘째 행과 매칭률을 채운다 (02-07 DoD).
+
+### 유의어 실적 — 16표제어 중 3개뿐
+
+`사람`(`인간`) · `어머니`(`모친`) · `학교`(`배움터`). 전부 기초사전 `rel_info` 에서 왔고,
+표준 샘플에는 `비슷한말` 이 하나도 없다 (02-01 조사: "기초사전보다 훨씬 드물다").
+02-07 "막히면" 이 정한 대로 **치명적이지 않다** — 유의어가 없으면 힌트는 뜻풀이로 폴백한다(04-03).
+실데이터에서도 비율이 이 수준이면 연상어 모드가 소수 단어에만 뜬다는 뜻이므로,
+02-10 눈 검수에서 실제 비율을 기록한다.
+
+### 출력 바이트 재현성
+
+`sorted(by_word.items())` 로 표제어 순회, 같은 표제어 안에서는 `(기초 우선, sense_id)` 로 정렬한다.
+dict 순회 순서에 기대면 파이썬 버전·삽입 순서에 따라 파일 바이트가 달라져
+`words.sqlite` 의 sha256 비교(05-01)가 깨진다. 유의어 목록도 **첫 등장 순**으로 중복 제거한다
+(`set` 순회 금지). 회귀 케이스는 `test_output_is_byte_stable` — 입력 순서를 뒤집어 두 번 돌려
+바이트를 비교한다.
+
+### 검증
+
+```powershell
+tools\.venv\Scripts\python.exe -m tools build --only merge --fixtures
+tools\.venv\Scripts\python.exe -m pytest tools/tests/test_merge.py -q
+Get-Content tools/build/merged.jsonl -TotalCount 3 -Encoding UTF8
+```
+
+`tools/tests/test_merge.py` 14개. 02-07 "테스트" 표 11종(동음이의어 결합 · 기초 우선 ·
+표준 보충 · `source` 비트 · 뜻풀이 컷 · 유의어 수집 · 유의어 중복 제거 · 빈도 결합 ·
+등급 결합 · 출력 바이트 안정 · 표준 없음) 전부 + `freq`/`vocab` **파일 자체 부재** ·
+매칭률 경고 · 픽스처 end-to-end 20→16.
