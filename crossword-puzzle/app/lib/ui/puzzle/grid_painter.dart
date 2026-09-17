@@ -1,8 +1,9 @@
-// 격자 1개를 그리는 CustomPainter (04-02).
+// 격자 1개를 그리는 CustomPainter (04-02, 번호 레이어는 04-03).
 //
-// 층 순서(아래→위, 04-02.grid-renderer.md "그려야 하는 것"):
+// 층 순서(아래→위, 04-02.grid-renderer.md "그려야 하는 것" + 04-03 번호):
 // 1 검은 칸 배경 → 2 일반 칸 배경 → 3 선택 단어 하이라이트 → 4 셀 테두리 →
-// 5 코어 테두리 강조 → 6 입력 음절 → 7 제출 후 정답/오답 표시.
+// 5 코어 테두리 강조 → 5.5 단어 번호(04-03) → 6 입력 음절 → 7 제출 후
+// 정답/오답 표시. 번호는 셀 좌상단, 음절은 셀 중앙이라 겹치지 않는다.
 //
 // 색은 전부 `ColorScheme`에서 가져온다(문서 "색" 표). 하드코딩한 색을 쓰면
 // 다크 모드에서 안 보인다.
@@ -19,6 +20,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/model/puzzle.dart';
 import '../../domain/model/submit_result.dart';
+import 'word_numbering.dart';
 
 class GridPainter extends CustomPainter {
   final Puzzle puzzle;
@@ -89,6 +91,12 @@ class GridPainter extends CustomPainter {
       }
     }
 
+    // 5.5층: 단어 번호 (04-03). 좌상단, 셀 크기의 22%.
+    for (final entry in numberCells(puzzle).entries) {
+      final (r, c) = entry.key;
+      _drawNumber(canvas, entry.value, _cellRect(r, c), colors.onSurfaceVariant);
+    }
+
     // 6~7층: 유저가 입력한 음절 + 제출 후 정답/오답 표시
     for (var r = 0; r < puzzle.height; r++) {
       for (var c = 0; c < puzzle.width; c++) {
@@ -147,6 +155,20 @@ class GridPainter extends CustomPainter {
       center.translate(half, half),
       linePaint,
     );
+  }
+
+  /// 단어 번호를 셀 좌상단에 작게 그린다 (04-03 "단어 번호 매기기").
+  /// 안 보이면 문서 "막히면" 절대로 격자에서 빼고 힌트 패널에만 표시한다.
+  void _drawNumber(Canvas canvas, int n, Rect rect, Color color) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: '$n',
+        style: TextStyle(fontSize: cell * 0.22, color: color, height: 1.0),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final margin = cell * 0.05;
+    tp.paint(canvas, Offset(rect.left + margin, rect.top + margin));
   }
 
   void _drawSyllable(Canvas canvas, String s, Rect rect, Color color) {

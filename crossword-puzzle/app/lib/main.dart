@@ -22,6 +22,7 @@ import 'package:provider/provider.dart';
 
 import 'data/db/db_bootstrap.dart';
 import 'data/drift_word_repository.dart';
+import 'data/hint_repository.dart';
 import 'data/stat_repository.dart';
 import 'domain/generator/grid_generator.dart';
 import 'ui/bootstrap/bootstrap_pages.dart';
@@ -49,6 +50,7 @@ Future<AppScope> _bootstrap() async {
     words: DriftWordRepository(db),
     stats: StatRepository(db),
     generator: GridGenerator(DriftWordRepository(db)),
+    hints: HintRepository(db),
   );
 }
 

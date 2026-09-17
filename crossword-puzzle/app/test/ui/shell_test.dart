@@ -17,6 +17,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 import 'package:jgame/data/db/app_database.dart';
+import 'package:jgame/data/hint_repository.dart';
 import 'package:jgame/data/stat_repository.dart';
 import 'package:jgame/domain/fixtures/dummy_dictionary.dart';
 import 'package:jgame/domain/generator/grid_generator.dart';
@@ -84,6 +85,7 @@ void main() {
       words: words,
       stats: StatRepository(db),
       generator: GridGenerator(words),
+      hints: HintRepository(db),
     );
   });
 

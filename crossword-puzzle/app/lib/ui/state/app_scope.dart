@@ -4,6 +4,7 @@
 // `Provider.value`로 주입하고 그 뒤로 바뀌지 않는다. 화면 간 상태 변화는
 // `SettingsModel`/`HomeModel`/`PuzzleModel`(ChangeNotifier)이 담당한다.
 import '../../data/db/app_database.dart';
+import '../../data/hint_repository.dart';
 import '../../data/stat_repository.dart';
 import '../../domain/generator/grid_generator.dart';
 import '../../domain/repository/word_repository.dart';
@@ -15,10 +16,15 @@ class AppScope {
   final StatRepository stats;
   final GridGenerator generator;
 
+  /// 힌트(뜻풀이·유의어) 조회 (04-03). `PuzzleModel.load`가 퍼즐 생성 직후
+  /// 한 번에 읽어 캐시한다.
+  final HintRepository hints;
+
   const AppScope({
     required this.db,
     required this.words,
     required this.stats,
     required this.generator,
+    required this.hints,
   });
 }
