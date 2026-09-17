@@ -13,7 +13,7 @@ import pytest
 
 from tools import config, io_util
 from tools import parse_krdict
-from tools.parse_stdict import OUT, iter_entries, run
+from tools.parse_stdict import OUT, iter_entries, parse_item, run
 
 # 픽스처가 일부러 심어 둔 라이선스 비개방 텍스트 (예문)
 SAMPLE_EXAMPLES = [
@@ -174,6 +174,50 @@ def test_excludes_licensed_media(tmp_path, monkeypatch):
     text = (tmp_path / OUT).read_text(encoding="utf-8")
     for banned in [".jpg", ".png", "http://", "https://", "dicmedia"]:
         assert banned not in text, f"라이선스 비개방 자료가 섞임: {banned}"
+
+
+def test_strips_formula_image_tags():
+    """02-04 검증(2026-09-17, 실데이터)에서 발견: 수식이 있는 sense는 definition
+    문자열 안에 <img src='http://stdmgt.korean.go.kr:8899/.../formula.do?...'> 가 그대로
+    박혀 있다(84개 sense, <img> 126건) — multimedia_info 키가 아니라 definition 텍스트에
+    섞여 있어 기존 라이선스 필터(그 키를 안 읽는 것)로는 안 걸러진다.
+
+    이 사례가 손수 만든 stdict_sample.json 에는 없다(02-01 재조사 때도 발견 못함). 그
+    픽스처는 02-06/02-07 fixture 종단 테스트가 총 개수를 하드코딩해 공유하므로, 항목을
+    보태 개수를 바꾸는 대신 parse_item() 을 직접 호출해 이 회귀만 좁게 막는다."""
+    item = {
+        "word_info": {
+            "word": "제곱근",
+            "word_unit": "단어",
+            "pos_info": [
+                {
+                    "pos": "명사",
+                    "comm_pattern_info": [
+                        {
+                            "sense_info": [
+                                {
+                                    "sense_code": 999001,
+                                    "definition": (
+                                        "제곱하여 <img style=\"vertical-align: middle;\" "
+                                        "src='http://stdmgt.korean.go.kr:8899/dictionary/"
+                                        "compilation/popup/formula.do?latex=x'>가 되는 수."
+                                    ),
+                                }
+                            ]
+                        }
+                    ],
+                }
+            ],
+        }
+    }
+    stats = {"total": 0, "kept": 0, "drop_phrase": 0, "drop_technical": 0}
+    rows = parse_item(item, stats)
+    assert len(rows) == 1
+    definition = rows[0]["definition"]
+    assert definition == "제곱하여 가 되는 수."
+    assert "<img" not in definition
+    assert "http://" not in definition
+    assert "stdmgt.korean.go.kr" not in definition
 
 
 def test_missing_source_writes_empty_file(tmp_path, monkeypatch):

@@ -10,6 +10,12 @@
 예문(example_info)·발음(pronunciation_info)·이미지(multimedia_info)는 라이선스 비개방
 (DESIGN 6절)이라 읽지도 저장하지도 않는다 — 아래 코드가 그 키를 참조하지 않는다.
 
+02-04 검증(2026-09-17, 실데이터 전수)에서 별도 문제가 나왔다: 수식이 있는 sense는
+`definition` 문자열 자체에 `<img src='http://stdmgt.korean.go.kr:8899/.../formula.do?...'>`
+형태의 이미지 태그가 그대로 박혀 있다(84개 sense, <img> 126건). multimedia_info 키가
+아니라 definition 텍스트 안에 섞여 있어서 위 "그 키를 참조하지 않는다"만으로는 안
+걸러진다 — `_strip_img_tags()`로 definition 문자열에서 <img> 태그만 따로 제거한다.
+
 파일당 최대 ~10MB(88개 파일, 총 ~789MB)라 파일 하나씩 `json.load` 로 통째로 읽는다.
 표준은 DESIGN 2절상 "보충" 자료다. 원본이 없어도 빈 파일을 내고 파이프라인은 계속 돈다.
 """
@@ -33,6 +39,19 @@ SYNONYM_RELATION_TYPES = {"동의어", "비슷한말"}
 # `word` 문자열 끝의 숫자(전부 2자리, 예: "각본01")로만 존재한다. raw_headword 는 원문
 # 그대로 두고(02-04 "여기서 고치지 않는다"), 이 값을 `homonym` 필드로 "분리"만 한다.
 _HOMONYM_SUFFIX = re.compile(r"(\d+)$")
+
+# 수식 렌더링용 이미지 태그 (라이선스 비개방, DESIGN 6절 "이미지는 개방 대상 아님").
+# 실데이터 예: <img style="vertical-align: middle;" src='http://stdmgt.korean.go.kr:8899/
+# dictionary/compilation/popup/formula.do?latex=...'> (닫는 태그 없이 단독으로 등장).
+_IMG_TAG = re.compile(r"<img\b[^>]*>", re.IGNORECASE)
+_MULTI_SPACE = re.compile(r"[ \t]{2,}")
+
+
+def _strip_img_tags(text: str) -> str:
+    """definition 문자열에 섞인 <img> 수식 태그를 제거한다. 태그를 들어내고 남는
+    공백만 한 칸으로 접는다 — 태그가 감싸던 수식 자체(값)는 애초에 복원할 수 없고
+    복원 대상도 아니다(DESIGN 6절 "추출 단계에서 제외")."""
+    return _MULTI_SPACE.sub(" ", _IMG_TAG.sub("", text)).strip()
 
 # 전문어(cat_info)는 아직 거르지 않는다 — 02-04 "막히면": 일단 약하게 걸고
 # 02-10 눈 검수 · 03-05 실패율을 보고 조인다. 처음부터 세게 걸면 되돌리기 어렵다.
@@ -111,7 +130,7 @@ def parse_item(item: dict, stats: dict) -> list[dict]:
                     stats["drop_technical"] += 1
                     continue
                 sense_code = sinfo.get("sense_code")
-                definition = (sinfo.get("definition") or "").strip()
+                definition = _strip_img_tags((sinfo.get("definition") or "").strip())
                 if sense_code is None or not definition:
                     continue
                 out.append({
