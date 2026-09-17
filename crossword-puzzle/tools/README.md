@@ -222,9 +222,11 @@ stdict: {'total': 436587, 'kept': 432079, 'drop_phrase': 74332, 'drop_technical'
 - **krdict entry.val 중복(새로 발견, 버그 수정).** 위 "1. 한국어기초사전" 절 참조.
   `parse_krdict.py` 가 등장 횟수로 키를 갈라 `sense_id` 충돌을 막는다.
 - **실데이터 규모에서 파이프라인 전체(정규화→병합→점수→SQLite) 시험 실행 — 완료, 결과는
-  아래 참고용 기록.** 이번 커밋에 포함된 `words.sqlite`(app/assets)는 여전히
-  **픽스처 기준 샘플**이다(19단어) — 실데이터로 만든 진짜 DB 로 교체하는 결정은 02-09/02-10
-  눈 검수 몫이라 이번 범위에 넣지 않았다. 아래는 그 판단을 위한 참고 수치다(임시 빌드
+  아래 참고용 기록.** (2026-09-17 후속: 이 시험 실행 다음에 실제로 `python -m tools
+  build`/`check`/`report` 를 실데이터로 끝까지 돌렸고, `app/assets/words.sqlite` 를
+  그 결과물(26,000단어, `config.MAX_WORDS` 컷 적용 후, 9.3MB)로 교체했다 — 더 이상
+  픽스처 샘플이 아니다. 자세한 경위는 위 "새로운 미해결 항목" 뒤에 붙은 "후속 처리"
+  절 참고.) 아래는 그 판단을 위해 남겨 둔 최초 시험 실행의 참고 수치다(임시 빌드
   디렉터리에서 1회성으로 실행, 커밋되지 않음):
 
   ```
@@ -258,6 +260,23 @@ stdict: {'total': 436587, 'kept': 432079, 'drop_phrase': 74332, 'drop_technical'
      골라 담을지**(예: 상위 3만 단어) 를 02-10 에서 사람이 결정해야 한다. 이번 재작업
      범위(02-01)는 "파서가 실데이터를 정확히 읽는지" 까지이므로 용량 조정 자체는
      여기서 하지 않았다.
+
+  **위 두 항목의 후속 처리(2026-09-17, 02-09/02-10 단계에서 실제로 `build`/`check`/
+  `report` 를 끝까지 돌리며 결정).**
+  - **항목 2(용량)**: ①②③ 을 실측했다 — ① `DEFINITION_MAX_CHARS` 는 30~80자 전 구간을
+    돌려도 32.9~34.6MB 로 사실상 무효(평균 뜻풀이 32자라 컷에 거의 안 걸림), ②
+    `word_char` 를 비우면 24.6MB(9MB 절감)까지만 줄고 그마저 `app_database.dart`/
+    `schema_contract_test.dart`(03-01)를 같이 고쳐야 하는데 이 작업 환경엔 Flutter/Dart
+    툴체인이 없어 고쳐도 검증 못 한다. 그래서 이 README가 제시했던 대안 **"티어 상위
+    N개만 담기"** 를 택했다 — `config.MAX_WORDS = 26000`(02-08 "용량 컷" 절,
+    `score.py.apply_word_cap`), 결과 9.3MB. `word_char` 제거는 폐기가 아니라 03-01
+    담당으로 다음 순번에 남겨 둔다(위 "1. 한국어기초사전" 절 옆의 03-01 word_char
+    절과 `docs/DESIGN.md` 5절 참고).
+  - **항목 1(등급 매칭률)**: `MAX_WORDS` 컷으로 후보 풀이 26,000개로 줄면서 빈도 매칭이
+    오히려 88%(22,761/26,000)로 크게 올랐다 — 컷 기준이 score(빈도·등급·기초사전
+    등재를 반영)라 빈도 정보가 있는 단어가 우선 남기 때문이다. 등급 매칭 자체는
+    `python -m tools report` 가 집계하지 않으므로(빈도만 요약에 나온다) 정확한
+    사후 수치는 없고, 02-10 눈 검수로 넘긴다.
 
 ### (과거) 00-01 승인 전 fixtures 기준 조사 — 요약
 
@@ -368,7 +387,9 @@ F5 경고 · JSONL UTF-8 · 픽스처 end-to-end 37→23(02-01 재조사로 JSON
 
 > ⚠ 아래 숫자는 새 픽스처(JSON/xlsx/xls) 기준이다. 실데이터 규모 실행 결과는 위
 > "실제 파일 구조 조사 결과 → 남은 확인 사항" 절 참고(88,957 words, 빈도 매칭 34.4%,
-> 등급 매칭 3.6%). `merged.jsonl`/`words.sqlite` 는 여전히 이 픽스처로 만든 것이다.
+> 등급 매칭 3.6%, `MAX_WORDS` 컷 적용 후 26,000단어 기준으로는 위 "후속 처리" 참고).
+> 아래 표·예시의 `merged.jsonl` 은 여전히 이 픽스처로 만든 것이다. (2026-09-17 후속:
+> `app/assets/words.sqlite` 자체는 실데이터로 교체됐다 — 픽스처인 건 이 절의 예시뿐이다.)
 
 `tools/merge.py` — `build/normalized.jsonl` (+ `build/freq.jsonl` · `build/vocab.jsonl`)
 → `build/merged.jsonl`. 규칙은 [docs/plan/02-07.merge.md](../docs/plan/02-07.merge.md) "결합 규칙" 표.
@@ -559,9 +580,12 @@ tools\.venv\Scripts\python.exe -m pytest tools/tests/test_score.py tools/tests/t
 
 ## schema.sql · SQLite 빌드 (02-09)
 
-> ⚠ 아래 숫자는 새 픽스처(19표제어) 기준이다. 실데이터 규모(88,957 words) 시험 빌드는
-> 33.6MB 로 용량 목표(10MB)를 넘겼다 — 위 "남은 확인 사항" 참조. 커밋된
-> `app/assets/words.sqlite` 는 여전히 이 픽스처 DB 다.
+> ⚠ 아래 숫자는 새 픽스처(19표제어) 기준이다(이 절의 표·예시 전용). 실데이터 규모
+> (88,957 words, `MAX_WORDS` 컷 전) 시험 빌드는 33.6MB 로 용량 목표(10MB)를 넘겼었다 —
+> 위 "남은 확인 사항"·"후속 처리" 참조. **2026-09-17 후속**: `config.MAX_WORDS = 26000`
+> 컷을 넣어 실제로 `python -m tools build`(실데이터)까지 돌렸고, 커밋된
+> `app/assets/words.sqlite` 는 그 결과물(26,000단어, 9.3MB) — 더 이상 픽스처 DB 가
+> 아니다.
 
 `tools/schema.sql` — word · sense · word_char · word_stat · meta 5개 테이블 +
 idx_word_c1..c5 · idx_sense_headword 6개 인덱스.

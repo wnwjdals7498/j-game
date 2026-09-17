@@ -6,6 +6,10 @@
 정한 것이고, 여기서 그대로 구현한다. 조정 손잡이는 전부 `config.py` 에 있다.
 
 > 7등분할 때 **등분위 금지** — 상위 티어를 얇게 가져간다 (DESIGN 4절 "난이도 7단계 기준").
+
+`config.MAX_WORDS` 가 설정돼 있으면 점수 매긴 뒤 tier 나누기 전에 상위(쉬운) N개만
+남긴다 (02-01 실데이터 88,957개가 10MB 목표를 크게 넘어 02-09 "막히면"의 대안으로
+채택 — `config.py` MAX_WORDS 주석 참고).
 """
 from . import config, hangul, io_util
 
@@ -58,6 +62,26 @@ def assign_tiers(scored: list[dict]) -> None:
         t += 1
 
 
+def apply_word_cap(rows: list[dict]) -> list[dict]:
+    """`config.MAX_WORDS` 가 있으면 score 오름차순(쉬운 순) 상위 N개만 남긴다.
+
+    실데이터(88,957개, 02-01)에서는 `DEFINITION_MAX_CHARS` 로 10MB 목표를 맞출 수
+    없었다(config.py MAX_WORDS 주석 참고) — 그래서 여기서 표제어 수 자체를 줄인다.
+    자르는 기준이 score(빈도·등급·기초사전 등재 보정을 이미 반영한 값)이므로,
+    잘려 나가는 쪽은 빈도 정보가 없는(가장 불확실한) 표제어부터다. `assign_tiers`
+    는 이 함수가 돌려준 부분집합에 대해서만 새로 호출되므로 TIER_RATIO 비율은
+    그대로 유지된다. fixtures/소규모 입력은 `len(rows) <= MAX_WORDS` 라 그대로 통과한다.
+    """
+    rows.sort(key=lambda r: (r["score"], r["headword"]))
+    cap = config.MAX_WORDS
+    if cap and len(rows) > cap:
+        dropped = len(rows) - cap
+        print(f"    score: 용량 컷 적용 - 상위 {cap:,}개만 유지 (하위 {dropped:,}개 제외,"
+              f" config.MAX_WORDS)")
+        rows = rows[:cap]
+    return rows
+
+
 def run(use_fixtures: bool = False) -> int:
     rows = list(io_util.read_jsonl(config.BUILD / IN))
     ranks = [r["freq_rank"] for r in rows if r.get("freq_rank")]
@@ -66,6 +90,7 @@ def run(use_fixtures: bool = False) -> int:
     for r in rows:
         # round(, 6): 부동소수 꼬리 때문에 파일이 실행마다 달라지는 걸 막는다 (재현성).
         r["score"] = round(compute_score(r, max_rank), 6)
+    rows = apply_word_cap(rows)
     assign_tiers(rows)
 
     counts: dict[int, int] = {}

@@ -9,7 +9,7 @@ import re
 import pytest
 
 from tools import config, io_util
-from tools.score import IN, OUT, assign_tiers, compute_score, run
+from tools.score import IN, OUT, apply_word_cap, assign_tiers, compute_score, run
 
 
 def _r(headword="가나", freq_rank=None, vocab_grade=None, in_krdict=False) -> dict:
@@ -159,6 +159,42 @@ def test_run_adds_score_and_tier(tmp_path, monkeypatch, capsys):
     assert re.search(r"score: 4 words", out)
     for t in range(1, config.TIER_COUNT + 1):
         assert re.search(rf"tier {t}\s+\d", out)
+
+
+# --- 02-01 재적재(88,957개 실측) 대응: 용량 컷 (config.MAX_WORDS) ---
+
+def test_apply_word_cap_keeps_lowest_scoring_rows(monkeypatch):
+    """컷이 있으면 score 오름차순(쉬운 순) 상위 N개만 남는다."""
+    monkeypatch.setattr(config, "MAX_WORDS", 3)
+    rows = [{"headword": _hw(i), "score": s} for i, s in enumerate([0.9, 0.1, 0.5, 0.3, 0.7])]
+    kept = apply_word_cap(rows)
+    assert len(kept) == 3
+    assert sorted(r["score"] for r in kept) == [0.1, 0.3, 0.5]
+
+
+def test_apply_word_cap_noop_when_under_limit(monkeypatch):
+    """행 수가 `MAX_WORDS` 이하면 그대로 통과한다 (fixtures 빌드가 이 경로를 탄다)."""
+    monkeypatch.setattr(config, "MAX_WORDS", 100)
+    rows = [{"headword": _hw(i), "score": 0.5} for i in range(5)]
+    assert len(apply_word_cap(rows)) == 5
+
+
+def test_apply_word_cap_disabled_when_falsy(monkeypatch):
+    """`MAX_WORDS` 가 0/None 이면 컷을 걸지 않는다."""
+    monkeypatch.setattr(config, "MAX_WORDS", None)
+    rows = [{"headword": _hw(i), "score": 0.5} for i in range(5)]
+    assert len(apply_word_cap(rows)) == 5
+
+
+def test_run_applies_word_cap_before_tiering(tmp_path, monkeypatch):
+    """`run()` 전체 경로: 컷 이후에도 tier 비율은 잘린 부분집합 기준으로 다시 맞는다."""
+    monkeypatch.setattr(config, "MAX_WORDS", 100)
+    rows = [_r(_hw(i), freq_rank=i + 1) for i in range(1000)]
+    out = _run(tmp_path, monkeypatch, rows)
+    assert len(out) == 100
+    # 컷 후에도 가장 쉬운(빈도 1위) 쪽이 남고, tier 1이 존재한다 (등분위 아님 유지).
+    assert {r["tier"] for r in out} <= set(range(1, config.TIER_COUNT + 1))
+    assert min(r["tier"] for r in out) == 1
 
 
 def test_score_is_rounded_to_six_places(tmp_path, monkeypatch):

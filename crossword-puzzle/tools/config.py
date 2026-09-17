@@ -31,6 +31,23 @@ ADJ_PER_EXTRA_SYLLABLE = 0.03    # (음절수 - 2) 배
 ADJ_COMPLEX_JAMO = 0.05
 NO_FREQ_BASE = 1.0               # 빈도 정보 없음 = 가장 어려움
 
+# 용량 컷: score 오름차순(=쉬운 순) 상위 MAX_WORDS 개만 남기고 tier를 다시 매긴다.
+# 02-01 실데이터 첫 실행(2026-09-17)에서 02-06 필터를 통과한 표제어가 88,957개였는데,
+# DEFINITION_MAX_CHARS 는 이 규모에서 거의 효과가 없었다(30~80자 전부 시도해도 33.6MB가
+# 32.9~34.6MB 사이만 오갔다 — 평균 뜻풀이 길이가 32자라 컷에 거의 안 걸린다. 88,957행이
+# word/sense/word_char 세 테이블과 5개 cN 인덱스에 고르게 곱해지는 게 진짜 원인이다).
+# word_char 제거(02-09 "막히면" ②)도 24.6MB까지만 줄고(9MB 절감), 그마저 03-01
+# app_database.dart의 WordChars 테이블·schema_contract_test.dart를 함께 고쳐야 해서
+# 이번 재적재 범위를 벗어난다(이 환경엔 Flutter/Dart 툴체인이 없어 고쳐도 검증 불가).
+# 그래서 tools/README.md가 미해결 항목 2로 남겨 둔 두 번째 대안 "티어 상위 N개만
+# 담기"를 택했다. score.py가 scored 전체를 score 오름차순 정렬한 뒤 이 값으로 자르고
+# 그 부분집합에 대해서만 tier를 다시 매긴다 — 배점 산식·TIER_RATIO는 그대로다.
+# 실측(2026-09-17, 임시 build 디렉터리에서 이분 탐색): 26,000개 -> 9.35MB
+# (27,000개는 9.74MB로 더 타이트하다. 다음 6개월 주기 갱신에서 데이터가 조금만 늘어도
+# 10MB를 다시 넘을 수 있어 26,000으로 여유를 남겼다). fixtures 빌드는 애초에 수십 행이라
+# 이 컷에 걸리지 않는다.
+MAX_WORDS = 26000
+
 # --- 출처 비트 (02-09 schema) ---
 SRC_KRDICT = 1
 SRC_STDICT = 2
