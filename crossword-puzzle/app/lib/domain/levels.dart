@@ -126,3 +126,11 @@ const List<LevelSpec> levels = [
 
 /// id로 조회. UI(04-06)가 쓴다.
 LevelSpec levelById(int id) => levels.firstWhere((l) => l.id == id);
+
+/// [current]의 다음 레벨. 마지막 레벨이면 null (04-05 "버튼 동작":
+/// "다음 레벨을 새 seed로 생성. 마지막 레벨이면 홈으로").
+LevelSpec? nextLevelOf(LevelSpec current) {
+  final i = levels.indexWhere((l) => l.id == current.id);
+  if (i < 0 || i + 1 >= levels.length) return null;
+  return levels[i + 1];
+}

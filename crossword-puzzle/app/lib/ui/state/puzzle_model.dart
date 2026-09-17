@@ -4,12 +4,13 @@
 // 마지막 입력이 이기려면 격자 셀이 단일 진실이어야 한다. 단어별 입력 버퍼를
 // 따로 두지 않는다. `Map<(int, int), String>`은 01-08의 `Answers` 타입 별칭과
 // 정확히 같은 타입이다.
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../../data/hint_repository.dart';
 import '../../domain/model/level_spec.dart';
 import '../../domain/model/puzzle.dart';
 import '../../domain/model/submit_result.dart';
+import '../../domain/scoring/scorer.dart';
 import 'app_scope.dart';
 import 'settings_model.dart';
 
@@ -138,7 +139,63 @@ class PuzzleModel extends ChangeNotifier {
     selected = order[(i + 1) % order.length];
     notifyListeners();
   }
+
+  /// 제출 (04-05 "제출 흐름"). 확인 다이얼로그 → 일괄 채점 → 통계 반영.
+  /// `isFirstSubmit`를 먼저 조회해 [SubmitResult]에 담는다 — `recordSubmit`도
+  /// 내부에서 다시 확인하지만(03-04), 결과 화면이 "이번 제출은 통계에 반영되지
+  /// 않았습니다"를 표시하려면 값이 필요하다.
+  Future<void> submit(BuildContext context) async {
+    final blanks = Scorer.blankCellCount(puzzle!, answers); // 01-08
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('제출하시겠습니까?'),
+        content: Text(blanks > 0
+            ? '빈 칸이 $blanks개 있습니다. 빈 칸은 오답으로 처리됩니다.'
+            : '모든 칸을 채웠습니다.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(c, false),
+              child: const Text('계속 풀기')),
+          FilledButton(
+              onPressed: () => Navigator.pop(c, true),
+              child: const Text('제출')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    final isFirst = await scope.stats.isFirstSubmit(puzzle!.levelId, puzzle!.seed);
+    final r = Scorer.score(puzzle!, answers, isFirstSubmit: isFirst);
+    await scope.stats.recordSubmit(
+        levelId: puzzle!.levelId, seed: puzzle!.seed, result: r);
+
+    submitted = true;
+    result = r;
+    notifyListeners();
+  }
+
+  /// "다시 풀기" (04-05 "버튼 동작"): 같은 seed로 같은 퍼즐 재도전.
+  /// `puzzle`/`hints`는 그대로 둔다 — 같은 (levelId, seed)면 생성기가 결정적으로
+  /// 같은 격자를 만들므로(01-07) 다시 생성할 필요가 없다. 입력·제출 상태만
+  /// 초기화한다. `answers`를 `.clear()`가 아니라 **새 맵으로 교체**하는 이유는
+  /// 위 `answers` 필드 주석과 같다 — 같은 인스턴스를 제자리에서 비우면
+  /// `GridPainter.shouldRepaint`가 옛 참조와 새 참조가 동일 객체라 차이를 못
+  /// 본다.
+  void retry() {
+    answers = {};
+    selected = null;
+    focusedCell = null;
+    submitted = false;
+    result = null;
+    notifyListeners();
+  }
 }
+
+/// 새 퍼즐 seed (04-05 "seed 생성 규칙"). `Puzzle.seed`가 `word_stat`의 첫 제출
+/// 판정 키(03-04)이므로 "다음 레벨"마다 매번 달라야 한다.
+int newSeed() => DateTime.now().millisecondsSinceEpoch & 0x7FFFFFFF;
 
 /// `PlacedWord`는 `==`를 재정의하지 않았다(01-01). 위치+방향으로 비교한다.
 /// 같은 표제어가 한 격자에 두 번 안 나오므로(01-03 규칙 6) `headword` 비교도
