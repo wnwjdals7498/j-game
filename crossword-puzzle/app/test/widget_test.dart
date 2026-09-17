@@ -8,12 +8,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:jgame/domain/fixtures/dummy_dictionary.dart';
 import 'package:jgame/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+    // MyApp이 이제 실 DB WordRepository를 받는다 (03-05, main.dart 임시 진입점).
+    // 위젯 테스트는 파일시스템/DB 없이 도는 InMemoryWordRepository로 대신한다.
+    final repo = InMemoryWordRepository(buildDummyDictionary(seed: 1));
+
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(MyApp(repo: repo));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

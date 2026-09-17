@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'data/db/db_bootstrap.dart';
+import 'data/drift_word_repository.dart';
+import 'domain/repository/word_repository.dart';
+import 'ui/debug/benchmark_page.dart';
+
+// 03-05: 실기기 벤치마크 화면(아래 AppBar의 속도계 아이콘)이 실 DB
+// WordRepository를 필요로 해서 여기서 DB를 부트스트랩한다. main.dart 전체는
+// 4단계(04-01 앱 셸·상태 관리)에서 다시 짜인다 — 이 부트스트랩과 진입점은
+// 그때까지의 **임시** 배선이다.
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final db = await DbBootstrap.open();
+  final repo = DriftWordRepository(db);
+  runApp(MyApp(repo: repo));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final WordRepository repo;
+  const MyApp({super.key, required this.repo});
 
   // This widget is the root of your application.
   @override
@@ -28,15 +41,15 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Flutter Demo Home Page', repo: repo),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.repo});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -48,6 +61,9 @@ class MyHomePage extends StatefulWidget {
   // always marked "final".
 
   final String title;
+
+  /// 03-05 임시 진입점(아래 AppBar 액션)이 벤치마크 화면에 넘길 실 DB repo.
+  final WordRepository repo;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -84,6 +100,19 @@ class _MyHomePageState extends State<MyHomePage> {
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
+        actions: [
+          // 03-05 임시 진입점: 실기기 DoD 측정용 벤치마크 화면.
+          // 4단계(04-06)에서 설정 화면 하위로 옮기고 이 버튼은 제거한다.
+          IconButton(
+            icon: const Icon(Icons.speed),
+            tooltip: '벤치마크 (임시 · 03-05)',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => BenchmarkPage(repo: widget.repo),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
@@ -102,7 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
           // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
           // action in the IDE, or press "p" in the console), to see the
           // wireframe for each widget.
-          mainAxisAlignment: .center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('You have pushed the button this many times:'),
             Text(
