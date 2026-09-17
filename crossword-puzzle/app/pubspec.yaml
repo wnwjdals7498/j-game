@@ -34,8 +34,11 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  drift: ^2.35.0
+  drift_flutter: ^0.3.1
+  sqlite3_flutter_libs: ^0.6.0+eol
+  path_provider: ^2.1.6
 
-  # 3단계에서 추가: drift, drift_flutter, sqlite3_flutter_libs, path_provider
   # 5단계에서 추가: http, crypto
   # 4단계에서 결정 후 추가: provider 또는 flutter_riverpod
 
@@ -50,7 +53,9 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   test: ^1.25.0
-  # 3단계에서 추가: drift_dev, build_runner
+  drift_dev: ^2.35.0
+  build_runner: ^2.16.1
+  sqlite3: ^3.6.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
