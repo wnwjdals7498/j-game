@@ -61,5 +61,9 @@ CHECK_MIN_FREQ_MATCH_PCT = 30     # 빈도 매칭률 기준 (리포트 요약의
 SCHEMA_VERSION = 1
 DB_VERSION = 1        # 갱신할 때마다 +1 (05-01 manifest 비교 키)
 
+# REPO/MIN_APP_VERSION(갱신 배포처)은 여기 두지 않는다 — tools/release_db.py는
+# `python tools/release_db.py`로 직접 실행되는 독립 스크립트라 tools 패키지를
+# import할 수 없다(파이프라인 모듈들과 다름). 그 스크립트 안에 자체 상수로 둔다.
+
 assert sum(TIER_RATIO) == 100, "TIER_RATIO must sum to 100"
 assert len(TIER_RATIO) == TIER_COUNT

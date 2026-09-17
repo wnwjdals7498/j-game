@@ -1,0 +1,11 @@
+{
+  "db_version": 3,
+  "schema_version": 1,
+  "url": "https://github.com/wnwjdals7498/j-game/releases/download/db-v3/words-v3.sqlite",
+  "sha256": "a2dd6cfca1bd1f29983a4c94207f45cc10e8572affa62e236df66e4befb70164",
+  "size_bytes": 9800000,
+  "min_app_version": "1.0.0",
+  "published_at": "2027-03-01",
+  "word_count": 26000,
+  "notes": "2027년 3월 사전 갱신"
+}
