@@ -9,6 +9,7 @@
 (02-09 "재현성").
 """
 import json
+import shutil
 import sqlite3
 from datetime import datetime, timezone
 
@@ -32,6 +33,8 @@ LICENSE_PENDING = (
 
 
 def run(use_fixtures: bool = False) -> int:
+    _sync_licenses()                      # 04-06: 두 파일이 갈라지지 않게 매 빌드마다 강제
+
     dst = config.BUILD / OUT
     dst.parent.mkdir(parents=True, exist_ok=True)
     if dst.exists():
@@ -129,6 +132,22 @@ def _source_versions(use_fixtures: bool) -> dict:
                         st.st_mtime, timezone.utc).isoformat(),
                 }
     return {"origin": "fixtures" if use_fixtures else "raw", "files": files}
+
+
+def _sync_licenses() -> None:
+    """`docs/LICENSES.md` -> `app/assets/LICENSES.md` 자동 복사 (04-06 "복사를
+    자동화한다" — 두 파일이 갈라지면 CC BY-SA 2.0 KR 표기 의무 위반이다).
+
+    04-06 "막히면": "복사를 `python -m tools build` 에 넣어 강제한다" — 이 함수가
+    `run()` 맨 앞에서 항상 불려 별도 스크립트 실행을 잊는 경로가 없게 한다.
+    `docs/LICENSES.md` 가 아직 없으면(00-01 승인 대기) 조용히 건너뛴다 —
+    `_license_notice()`가 이미 그 경우의 `LICENSE_PENDING` 문구를 처리한다.
+    """
+    src = config.ROOT / "docs" / "LICENSES.md"
+    if not src.exists():
+        return
+    config.APP_ASSETS.mkdir(parents=True, exist_ok=True)
+    shutil.copy(src, config.APP_ASSETS / "LICENSES.md")
 
 
 def _license_notice() -> str:

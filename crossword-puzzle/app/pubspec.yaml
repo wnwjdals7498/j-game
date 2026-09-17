@@ -42,6 +42,10 @@ dependencies:
   # 4단계(04-01) 결정: ChangeNotifier + provider (docs/plan/04-01.app-shell-state.md)
   provider: ^6.1.0
 
+  # 4단계(04-06): SettingsModel 저장(hintMode, wifiOnlySync). DB 교체(05-03) 후에도
+  # 설정이 살아남아야 하므로 DB가 아니라 여기에 저장한다.
+  shared_preferences: ^2.3.0
+
   # 5단계에서 추가: http, crypto
 
 dev_dependencies:

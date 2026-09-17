@@ -88,6 +88,19 @@ class StatRepository {
     return r.read<int?>('best');
   }
 
+  /// 전체 레벨의 최고 점수를 **한 번의 쿼리**로 조회한다 (04-06 "레벨마다 DB
+  /// 조회 1회 → 12회. 홈 진입마다 도는 건 낭비다"). `bestScore`를 레벨 수만큼
+  /// 반복 호출하는 N+1을 피하려고 `HomeModel.load`가 이걸 쓴다. 제출 기록이
+  /// 없는 레벨은 이 맵에 아예 키가 없다(=null과 동치).
+  Future<Map<int, int>> bestScores() async {
+    final rows = await _db.customSelect(
+      'SELECT level_id, MAX(first_score) AS best FROM puzzle_log GROUP BY level_id',
+    ).get();
+    return {
+      for (final r in rows) r.read<int>('level_id'): r.read<int>('best'),
+    };
+  }
+
   /// 디버그·테스트용.
   Future<void> resetAll() async {
     await _db.transaction(() async {
