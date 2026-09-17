@@ -70,6 +70,10 @@ class Metas extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
+  /// `meta.schema_version` 에 들어있어야 할 값 (tools/config.py `SCHEMA_VERSION`,
+  /// 02-09 참조). db_bootstrap(03-02)이 시드 DB를 연 뒤 이 값과 비교한다.
+  static const int expectedSchemaVersion = 1;
+
   /// 시드 DB가 완성된 스키마로 오므로 drift 마이그레이션을 쓰지 않는다.
   /// 버전 불일치 처리는 db_bootstrap(03-02)이 담당한다.
   @override
