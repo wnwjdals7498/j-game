@@ -120,6 +120,21 @@ word_char  역색인                  "~와 ~를 포함한 단어" 질의용
   `python -m tools build` 를 돌리는 절차를 `docs/RELEASE.md`(06-05)에 명시한다.
   현재 커밋된 파일은 **`tools/fixtures/` 샘플로 만든 것**이라 실데이터가 아니다
   (00-01 승인 대기). DB 안 `meta.source_versions.origin` 이 `fixtures` 로 그 사실을 말한다.
+- **`word_char` 역색인은 현재 어디서도 쓰지 않는다** (03-03 결정, 02-09 "막히면" 절이
+  이 판단을 03-03에 위임했다). 근거: `findByPattern`(03-03)은 `(len, tier, cN)`
+  인덱스만으로 충분하고(desktop SQLite `EXPLAIN QUERY PLAN` 으로 확인,
+  `app/test/data/word_repository_test.dart` "인덱스 사용" 테스트), 4단계 힌트
+  명세(`plan/04-03.selection-and-hint.md`)를 포함해 전체 계획 문서를 검색해도
+  "~을 포함한 단어" 질의를 쓰는 화면이 없다. 즉 02-09의 "안 쓰면 뺀다" 조건을
+  만족한다.
+  **다만 지금 스키마에서 즉시 제거하지는 않는다.** 제거하려면 `tools/schema.sql`·
+  `build_sqlite.py`(02-09)와 `app/lib/data/db/app_database.dart`(03-01)의
+  `WordChars` 테이블·관련 테스트(`schema_contract_test.dart` 등)를 함께 고쳐야
+  하는데, 이는 03-03(패턴 질의 구현)의 범위를 벗어나고, 지금 커밋된 DB는 어차피
+  00-01 승인 대기 중인 16단어 fixtures 샘플이라 용량 절감 효과를 실측할 수도 없다.
+  **실행 시점: 00-01 실데이터가 들어와 02-09를 다시 돌릴 때** 이 결정을 반영해
+  `word_char` 를 스키마에서 뺀다(위 파일들 동시 수정). 4단계 진행 중 "포함 단어"
+  힌트가 실제로 필요해지면 이 결정을 뒤집고 테이블을 유지한다.
 
 ---
 
