@@ -46,3 +46,13 @@ CREATE TABLE word_stat (
 );
 
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+
+-- 퍼즐 단위 "첫 제출" 판정. 앱이 쓴다. ETL은 빈 테이블만 만든다.
+-- 갱신 시 보존 대상 (05-03). 03-04에서 추가 — schema.sql 재빌드 필요.
+CREATE TABLE puzzle_log (
+  level_id     INTEGER NOT NULL,
+  seed         INTEGER NOT NULL,
+  first_score  INTEGER NOT NULL,
+  submitted_at INTEGER NOT NULL,
+  PRIMARY KEY (level_id, seed)
+);

@@ -1718,6 +1718,331 @@ class MetasCompanion extends UpdateCompanion<MetaRow> {
   }
 }
 
+class $PuzzleLogsTable extends PuzzleLogs
+    with TableInfo<$PuzzleLogsTable, PuzzleLogRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PuzzleLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _levelIdMeta = const VerificationMeta(
+    'levelId',
+  );
+  @override
+  late final GeneratedColumn<int> levelId = GeneratedColumn<int>(
+    'level_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _seedMeta = const VerificationMeta('seed');
+  @override
+  late final GeneratedColumn<int> seed = GeneratedColumn<int>(
+    'seed',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _firstScoreMeta = const VerificationMeta(
+    'firstScore',
+  );
+  @override
+  late final GeneratedColumn<int> firstScore = GeneratedColumn<int>(
+    'first_score',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _submittedAtMeta = const VerificationMeta(
+    'submittedAt',
+  );
+  @override
+  late final GeneratedColumn<int> submittedAt = GeneratedColumn<int>(
+    'submitted_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    levelId,
+    seed,
+    firstScore,
+    submittedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'puzzle_log';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PuzzleLogRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('level_id')) {
+      context.handle(
+        _levelIdMeta,
+        levelId.isAcceptableOrUnknown(data['level_id']!, _levelIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_levelIdMeta);
+    }
+    if (data.containsKey('seed')) {
+      context.handle(
+        _seedMeta,
+        seed.isAcceptableOrUnknown(data['seed']!, _seedMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_seedMeta);
+    }
+    if (data.containsKey('first_score')) {
+      context.handle(
+        _firstScoreMeta,
+        firstScore.isAcceptableOrUnknown(data['first_score']!, _firstScoreMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_firstScoreMeta);
+    }
+    if (data.containsKey('submitted_at')) {
+      context.handle(
+        _submittedAtMeta,
+        submittedAt.isAcceptableOrUnknown(
+          data['submitted_at']!,
+          _submittedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_submittedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {levelId, seed};
+  @override
+  PuzzleLogRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PuzzleLogRow(
+      levelId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}level_id'],
+      )!,
+      seed: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}seed'],
+      )!,
+      firstScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}first_score'],
+      )!,
+      submittedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}submitted_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PuzzleLogsTable createAlias(String alias) {
+    return $PuzzleLogsTable(attachedDatabase, alias);
+  }
+}
+
+class PuzzleLogRow extends DataClass implements Insertable<PuzzleLogRow> {
+  final int levelId;
+  final int seed;
+  final int firstScore;
+  final int submittedAt;
+  const PuzzleLogRow({
+    required this.levelId,
+    required this.seed,
+    required this.firstScore,
+    required this.submittedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['level_id'] = Variable<int>(levelId);
+    map['seed'] = Variable<int>(seed);
+    map['first_score'] = Variable<int>(firstScore);
+    map['submitted_at'] = Variable<int>(submittedAt);
+    return map;
+  }
+
+  PuzzleLogsCompanion toCompanion(bool nullToAbsent) {
+    return PuzzleLogsCompanion(
+      levelId: Value(levelId),
+      seed: Value(seed),
+      firstScore: Value(firstScore),
+      submittedAt: Value(submittedAt),
+    );
+  }
+
+  factory PuzzleLogRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PuzzleLogRow(
+      levelId: serializer.fromJson<int>(json['levelId']),
+      seed: serializer.fromJson<int>(json['seed']),
+      firstScore: serializer.fromJson<int>(json['firstScore']),
+      submittedAt: serializer.fromJson<int>(json['submittedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'levelId': serializer.toJson<int>(levelId),
+      'seed': serializer.toJson<int>(seed),
+      'firstScore': serializer.toJson<int>(firstScore),
+      'submittedAt': serializer.toJson<int>(submittedAt),
+    };
+  }
+
+  PuzzleLogRow copyWith({
+    int? levelId,
+    int? seed,
+    int? firstScore,
+    int? submittedAt,
+  }) => PuzzleLogRow(
+    levelId: levelId ?? this.levelId,
+    seed: seed ?? this.seed,
+    firstScore: firstScore ?? this.firstScore,
+    submittedAt: submittedAt ?? this.submittedAt,
+  );
+  PuzzleLogRow copyWithCompanion(PuzzleLogsCompanion data) {
+    return PuzzleLogRow(
+      levelId: data.levelId.present ? data.levelId.value : this.levelId,
+      seed: data.seed.present ? data.seed.value : this.seed,
+      firstScore: data.firstScore.present
+          ? data.firstScore.value
+          : this.firstScore,
+      submittedAt: data.submittedAt.present
+          ? data.submittedAt.value
+          : this.submittedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PuzzleLogRow(')
+          ..write('levelId: $levelId, ')
+          ..write('seed: $seed, ')
+          ..write('firstScore: $firstScore, ')
+          ..write('submittedAt: $submittedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(levelId, seed, firstScore, submittedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PuzzleLogRow &&
+          other.levelId == this.levelId &&
+          other.seed == this.seed &&
+          other.firstScore == this.firstScore &&
+          other.submittedAt == this.submittedAt);
+}
+
+class PuzzleLogsCompanion extends UpdateCompanion<PuzzleLogRow> {
+  final Value<int> levelId;
+  final Value<int> seed;
+  final Value<int> firstScore;
+  final Value<int> submittedAt;
+  final Value<int> rowid;
+  const PuzzleLogsCompanion({
+    this.levelId = const Value.absent(),
+    this.seed = const Value.absent(),
+    this.firstScore = const Value.absent(),
+    this.submittedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PuzzleLogsCompanion.insert({
+    required int levelId,
+    required int seed,
+    required int firstScore,
+    required int submittedAt,
+    this.rowid = const Value.absent(),
+  }) : levelId = Value(levelId),
+       seed = Value(seed),
+       firstScore = Value(firstScore),
+       submittedAt = Value(submittedAt);
+  static Insertable<PuzzleLogRow> custom({
+    Expression<int>? levelId,
+    Expression<int>? seed,
+    Expression<int>? firstScore,
+    Expression<int>? submittedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (levelId != null) 'level_id': levelId,
+      if (seed != null) 'seed': seed,
+      if (firstScore != null) 'first_score': firstScore,
+      if (submittedAt != null) 'submitted_at': submittedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PuzzleLogsCompanion copyWith({
+    Value<int>? levelId,
+    Value<int>? seed,
+    Value<int>? firstScore,
+    Value<int>? submittedAt,
+    Value<int>? rowid,
+  }) {
+    return PuzzleLogsCompanion(
+      levelId: levelId ?? this.levelId,
+      seed: seed ?? this.seed,
+      firstScore: firstScore ?? this.firstScore,
+      submittedAt: submittedAt ?? this.submittedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (levelId.present) {
+      map['level_id'] = Variable<int>(levelId.value);
+    }
+    if (seed.present) {
+      map['seed'] = Variable<int>(seed.value);
+    }
+    if (firstScore.present) {
+      map['first_score'] = Variable<int>(firstScore.value);
+    }
+    if (submittedAt.present) {
+      map['submitted_at'] = Variable<int>(submittedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PuzzleLogsCompanion(')
+          ..write('levelId: $levelId, ')
+          ..write('seed: $seed, ')
+          ..write('firstScore: $firstScore, ')
+          ..write('submittedAt: $submittedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1726,6 +2051,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $WordCharsTable wordChars = $WordCharsTable(this);
   late final $WordStatsTable wordStats = $WordStatsTable(this);
   late final $MetasTable metas = $MetasTable(this);
+  late final $PuzzleLogsTable puzzleLogs = $PuzzleLogsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1736,6 +2062,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     wordChars,
     wordStats,
     metas,
+    puzzleLogs,
   ];
 }
 
@@ -2722,6 +3049,198 @@ typedef $$MetasTableProcessedTableManager =
       MetaRow,
       PrefetchHooks Function()
     >;
+typedef $$PuzzleLogsTableCreateCompanionBuilder = PuzzleLogsCompanion Function({
+  required int levelId,
+  required int seed,
+  required int firstScore,
+  required int submittedAt,
+  Value<int> rowid,
+});
+typedef $$PuzzleLogsTableUpdateCompanionBuilder = PuzzleLogsCompanion Function({
+  Value<int> levelId,
+  Value<int> seed,
+  Value<int> firstScore,
+  Value<int> submittedAt,
+  Value<int> rowid,
+});
+
+class $$PuzzleLogsTableFilterComposer
+    extends Composer<_$AppDatabase, $PuzzleLogsTable> {
+  $$PuzzleLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get levelId => $composableBuilder(
+    column: $table.levelId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get seed => $composableBuilder(
+    column: $table.seed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get firstScore => $composableBuilder(
+    column: $table.firstScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get submittedAt => $composableBuilder(
+    column: $table.submittedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PuzzleLogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PuzzleLogsTable> {
+  $$PuzzleLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get levelId => $composableBuilder(
+    column: $table.levelId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get seed => $composableBuilder(
+    column: $table.seed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get firstScore => $composableBuilder(
+    column: $table.firstScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get submittedAt => $composableBuilder(
+    column: $table.submittedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PuzzleLogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PuzzleLogsTable> {
+  $$PuzzleLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get levelId =>
+      $composableBuilder(column: $table.levelId, builder: (column) => column);
+
+  GeneratedColumn<int> get seed =>
+      $composableBuilder(column: $table.seed, builder: (column) => column);
+
+  GeneratedColumn<int> get firstScore => $composableBuilder(
+    column: $table.firstScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get submittedAt => $composableBuilder(
+    column: $table.submittedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$PuzzleLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PuzzleLogsTable,
+          PuzzleLogRow,
+          $$PuzzleLogsTableFilterComposer,
+          $$PuzzleLogsTableOrderingComposer,
+          $$PuzzleLogsTableAnnotationComposer,
+          $$PuzzleLogsTableCreateCompanionBuilder,
+          $$PuzzleLogsTableUpdateCompanionBuilder,
+          (
+            PuzzleLogRow,
+            BaseReferences<_$AppDatabase, $PuzzleLogsTable, PuzzleLogRow>,
+          ),
+          PuzzleLogRow,
+          PrefetchHooks Function()
+        > {
+  $$PuzzleLogsTableTableManager(_$AppDatabase db, $PuzzleLogsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PuzzleLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PuzzleLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PuzzleLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> levelId = const Value.absent(),
+                Value<int> seed = const Value.absent(),
+                Value<int> firstScore = const Value.absent(),
+                Value<int> submittedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PuzzleLogsCompanion(
+                levelId: levelId,
+                seed: seed,
+                firstScore: firstScore,
+                submittedAt: submittedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int levelId,
+                required int seed,
+                required int firstScore,
+                required int submittedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PuzzleLogsCompanion.insert(
+                levelId: levelId,
+                seed: seed,
+                firstScore: firstScore,
+                submittedAt: submittedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$PuzzleLogsTable, PuzzleLogRow>(table),
+                  BaseReferences<_$AppDatabase, $PuzzleLogsTable, PuzzleLogRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PuzzleLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PuzzleLogsTable,
+      PuzzleLogRow,
+      $$PuzzleLogsTableFilterComposer,
+      $$PuzzleLogsTableOrderingComposer,
+      $$PuzzleLogsTableAnnotationComposer,
+      $$PuzzleLogsTableCreateCompanionBuilder,
+      $$PuzzleLogsTableUpdateCompanionBuilder,
+      (
+        PuzzleLogRow,
+        BaseReferences<_$AppDatabase, $PuzzleLogsTable, PuzzleLogRow>,
+      ),
+      PuzzleLogRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2736,4 +3255,6 @@ class $AppDatabaseManager {
       $$WordStatsTableTableManager(_db, _db.wordStats);
   $$MetasTableTableManager get metas =>
       $$MetasTableTableManager(_db, _db.metas);
+  $$PuzzleLogsTableTableManager get puzzleLogs =>
+      $$PuzzleLogsTableTableManager(_db, _db.puzzleLogs);
 }

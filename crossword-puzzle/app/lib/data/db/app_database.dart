@@ -66,7 +66,21 @@ class Metas extends Table {
   @override Set<Column> get primaryKey => {key};
 }
 
-@DriftDatabase(tables: [Words, Senses, WordChars, WordStats, Metas])
+/// 퍼즐 단위 "첫 제출" 판정 (03-04). `tools/schema.sql`에 03-04에서 추가된 테이블.
+@DataClassName('PuzzleLogRow')
+class PuzzleLogs extends Table {
+  @override String get tableName => 'puzzle_log';
+
+  IntColumn get levelId => integer().named('level_id')();
+  IntColumn get seed => integer()();
+  IntColumn get firstScore => integer().named('first_score')();
+  IntColumn get submittedAt => integer().named('submitted_at')();
+
+  @override Set<Column> get primaryKey => {levelId, seed};
+}
+
+@DriftDatabase(
+    tables: [Words, Senses, WordChars, WordStats, Metas, PuzzleLogs])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
