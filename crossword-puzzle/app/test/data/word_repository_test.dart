@@ -86,7 +86,10 @@ void main() {
         expect(w.length, 2, reason: w.headword);
         expect(w.syllableAt(0), '사', reason: w.headword);
       }
-      expect(r.map((w) => w.headword).toSet(), {'사과', '사람'});
+      // 실사전에는 '사'로 시작하는 2음절 단어가 137개(2025-09 빌드 기준) 있어
+      // 완전한 집합을 하드코딩할 수 없다 — 위 루프가 이미 패턴 일치를 전수
+      // 검증하므로, 여기서는 알려진 두 단어가 포함되는지만 확인한다.
+      expect(r.map((w) => w.headword), containsAll(['사과', '사람']));
     });
 
     test('fixed 여러 자리: 2자리 고정도 정확', () async {
@@ -121,7 +124,12 @@ void main() {
         exclude: {'사과'},
         limit: 50,
       );
-      expect(r.map((w) => w.headword).toList(), ['사람']);
+      // '사'로 시작하는 2음절 단어는 실사전에 여럿이라(위 테스트 참고) 정확히
+      // ['사람']을 기대할 수 없다 — 제외 대상이 빠졌는지, 다른 매치는
+      // 살아있는지만 확인한다.
+      final headwords = r.map((w) => w.headword);
+      expect(headwords, isNot(contains('사과')));
+      expect(headwords, contains('사람'));
     });
 
     test('exclude 후에도 limit 충족', () async {
@@ -167,15 +175,22 @@ void main() {
     });
 
     test('통계 순: stat을 심으면 점수 낮은 단어가 앞', () async {
-      // '바다'에 오답을 심어 score = 0 - 5*2 = -10 (다른 tier2 단어는 콜드 0점).
+      // 특정 표제어를 하드코딩하지 않는다 — 표제어별 tier는 사전 빌드마다
+      // 달라질 수 있다(예: '바다'는 fixtures에서 tier2였지만 실사전에서는
+      // tier1). 실제로 tier=2인 단어를 하나 골라 그 단어에 오답을 심는다.
+      final baseline = await repo.coreCandidates(tier: 2, count: 1, seed: 1);
+      final victim = baseline.first.headword;
+
+      // score = 0 - 5*2 = -10 (다른 tier2 단어는 콜드 0점이라 반드시 최하위).
       await db.customStatement(
-        "INSERT INTO word_stat(headword, correct, wrong) VALUES ('바다', 0, 5)",
+        'INSERT INTO word_stat(headword, correct, wrong) VALUES (?, 0, 5)',
+        [victim],
       );
       addTearDown(() => db.customStatement(
-          "DELETE FROM word_stat WHERE headword = '바다'"));
+          'DELETE FROM word_stat WHERE headword = ?', [victim]));
 
       final r = await repo.coreCandidates(tier: 2, count: 2, seed: 99);
-      expect(r.first.headword, '바다');
+      expect(r.first.headword, victim);
     });
 
     test('결정성: 같은 seed 두 번 → 같은 순서', () async {
