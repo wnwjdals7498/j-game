@@ -27,6 +27,11 @@ class LevelSpec {
   final int backtrackBudget; // 한 시도 안에서 허용하는 되감기 총 횟수
   final bool allowIsolated; // 고립 단어 1개 허용 여부 (규칙상 최대 1개)
 
+  /// 레벨 해제 점수 기준 (03-06, DESIGN.md 5절 8번).
+  /// 이전 레벨의 `score`(`correct - wrong * 2`)가 이 값 이상이면 클리어로 치고
+  /// 다음 레벨을 연다. 초안: 0 (맞은 단어 수 ≥ 틀린 단어 수). 4단계(04-06)가 읽는다.
+  final int clearScore;
+
   const LevelSpec({
     required this.id,
     required this.name,
@@ -38,6 +43,7 @@ class LevelSpec {
     this.maxAttempts = 20,
     this.backtrackBudget = 200,
     this.allowIsolated = true,
+    this.clearScore = 0,
   });
 
   int get minFillCount => fillQuotas.fold(0, (a, q) => a + q.min);

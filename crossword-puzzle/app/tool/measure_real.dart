@@ -12,14 +12,15 @@ import 'package:jgame/domain/measure/measure_runner.dart';
 /// 01-10의 [MeasureRunner] 를 그대로 쓰고 repository만 [DriftWordRepository]
 /// 로 바꾼다. `tool/` 은 `lib/` 밖이라 `dart:io` 를 써도 된다.
 ///
-/// **주의 (2026-09-17 기준)**: `app/assets/words.sqlite` 는 아직
-/// [00-01.data-request.md](../../docs/plan/00-01.data-request.md) 승인 대기
-/// 중이라 `tools/fixtures/` 손수 샘플(16단어)이다. 이 상태로 이 하네스를
-/// 돌려도 나오는 실패율·속도 수치는 16단어 표본 기준이라 **의미가 없다** —
-/// 목적은 `DriftWordRepository`/`AppDatabase` 배선이 실제로 도는지 확인하는
-/// 것뿐이다. `origin=fixtures` 를 감지하면 리포트 맨 위에 경고문을 붙이고
-/// DoD 판정(`exit(1)`)을 생략한다. 00-01 승인 후 실데이터로 재빌드된 DB로
-/// 반드시 재실행한다.
+/// **2026-09-17**: `app/assets/words.sqlite` 가 00-01 승인 후 실데이터(26,000단어,
+/// 기초사전+표준국어대사전+빈도+학습용 어휘 등급, `origin=raw`)로 재빌드됐다.
+/// 이 하네스로 낸 03단계 실측(레벨당 1000 seed)이 `docs/reports/03-real-failure.md`
+/// 에 있고, 그 결과로 03-06에서 `levels.dart` 를 v1으로 확정했다.
+///
+/// 아래 `origin=fixtures` 판정은 `tools/fixtures/` 손수 샘플(16단어)로 배선만
+/// 확인하던 이전 단계의 잔재다. 앞으로도 fixtures DB로 이 하네스를 돌릴 일이
+/// 있을 수 있어(예: CI 스모크) 판정 로직과 경고문은 그대로 둔다 — 지금 커밋된
+/// `assets/words.sqlite` 는 `origin=raw` 라 이 경고는 뜨지 않는다.
 ///
 /// 사용법 (`app/` 디렉터리에서):
 ///   dart run tool/measure_real.dart                  (전 레벨 1000회)
