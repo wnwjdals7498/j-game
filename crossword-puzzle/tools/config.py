@@ -12,8 +12,10 @@ MIN_LEN = 2               # 1음절 제외: 격자 교차 불가
 MAX_LEN = 5               # 6음절 이상 제외: 격자에 안 들어감
 HANGUL_START = 0xAC00     # 완성형 범위
 HANGUL_END = 0xD7A3
-ALLOWED_POS = {"명사"}    # 1차 범위. 02-01 조사 결과의 실제 값으로 맞출 것
-EXCLUDE_WORD_TYPES = {"구", "속담", "관용구"}
+ALLOWED_POS = {"명사"}    # 1차 범위. 02-01 실데이터 조사(2026-09-17)로 재확인된 값
+# "문법‧표현"의 가운뎃점은 U+2027(HYPHENATION POINT)이다. 흔한 가운뎃점(U+00B7)이 아니므로
+# 문자열을 새로 칠 때 실수하기 쉽다 — 02-01에서 실제 JSON 값을 그대로 복사해 왔다.
+EXCLUDE_WORD_TYPES = {"구", "속담", "관용구", "문법‧표현"}
 EXCLUDE_PROPER_NOUN = True
 
 # --- 뜻풀이 (02-03, 02-09) ---

@@ -1,0 +1,609 @@
+{
+  "_fixture_note": "02-01 재조사(2026-09-17) 이후 실데이터 구조를 흉내 낸 손수 만든 샘플. 실데이터가 아니다. docs/plan/02-04.parse-stdict.md, tools/README.md 참조.",
+  "channel": {
+    "total": 18,
+    "title": "표준국어대사전",
+    "item": [
+      {
+        "target_code": 90003,
+        "word_info": {
+          "word": "가게^주인",
+          "word_unit": "구",
+          "word_type": "고유어",
+          "pos_info": [
+            {
+              "pos_code": 90001,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90002,
+                  "sense_info": [
+                    {
+                      "definition": "가게를 차려 놓고 물건을 파는 사람.",
+                      "definition_original": "가게를 차려 놓고 물건을 파는 사람.",
+                      "type": "일반어",
+                      "sense_code": 900001,
+                      "example_info": [
+                        {
+                          "example": "가게 주인이 손님을 맞았다."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90006,
+        "word_info": {
+          "word": "강아지",
+          "word_unit": "단어",
+          "word_type": "고유어",
+          "pos_info": [
+            {
+              "pos_code": 90004,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90005,
+                  "sense_info": [
+                    {
+                      "definition": "개의 새끼.",
+                      "definition_original": "개의 새끼.",
+                      "type": "일반어",
+                      "sense_code": 900002,
+                      "multimedia_info": [
+                        {
+                          "link": "https://dicmedia.korean.go.kr/front/view/mediaView.do?file_no=1",
+                          "type": "사진"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "pronunciation_info": [
+            {
+              "pronunciation": "강아지"
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90009,
+        "word_info": {
+          "word": "사람",
+          "word_unit": "단어",
+          "word_type": "고유어",
+          "pos_info": [
+            {
+              "pos_code": 90007,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90008,
+                  "sense_info": [
+                    {
+                      "definition": "생각과 언어를 가지고 도구를 만들어 쓰며 사회를 이루어 사는 동물.",
+                      "definition_original": "생각과 언어를 가지고 도구를 만들어 쓰며 사회를 이루어 사는 동물.",
+                      "type": "일반어",
+                      "sense_code": 900003,
+                      "lexical_info": [
+                        {
+                          "word": "인간",
+                          "type": "동의어",
+                          "link": "https://stdict.korean.go.kr/search/searchView.do?word_no=111",
+                          "link_target_code": "111"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90012,
+        "word_info": {
+          "word": "하늘",
+          "word_unit": "단어",
+          "word_type": "고유어",
+          "pos_info": [
+            {
+              "pos_code": 90010,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90011,
+                  "sense_info": [
+                    {
+                      "definition": "지평선이나 수평선 위로 보이는 무한히 넓은 공간.",
+                      "definition_original": "지평선이나 수평선 위로 보이는 무한히 넓은 공간.",
+                      "type": "일반어",
+                      "sense_code": 900004
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90015,
+        "word_info": {
+          "word": "바다",
+          "word_unit": "단어",
+          "word_type": "고유어",
+          "pos_info": [
+            {
+              "pos_code": 90013,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90014,
+                  "sense_info": [
+                    {
+                      "definition": "지구 위에서 짠물이 크게 괴어 있는 곳.",
+                      "definition_original": "지구 위에서 짠물이 크게 괴어 있는 곳.",
+                      "type": "일반어",
+                      "sense_code": 900005
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90018,
+        "word_info": {
+          "word": "심근경색",
+          "word_unit": "단어",
+          "word_type": "한자어",
+          "pos_info": [
+            {
+              "pos_code": 90016,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90017,
+                  "sense_info": [
+                    {
+                      "definition": "심장 근육에 피가 통하지 않아 조직이 죽는 병.",
+                      "definition_original": "심장 근육에 피가 통하지 않아 조직이 죽는 병.",
+                      "type": "일반어",
+                      "sense_code": 900006,
+                      "cat_info": [
+                        {
+                          "cat": "의학"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90021,
+        "word_info": {
+          "word": "미분방정식",
+          "word_unit": "단어",
+          "word_type": "한자어",
+          "pos_info": [
+            {
+              "pos_code": 90019,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90020,
+                  "sense_info": [
+                    {
+                      "definition": "도함수를 포함하는 방정식.",
+                      "definition_original": "도함수를 포함하는 방정식.",
+                      "type": "일반어",
+                      "sense_code": 900007,
+                      "cat_info": [
+                        {
+                          "cat": "수학"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90024,
+        "word_info": {
+          "word": "발^없는^말이^천^리^간다",
+          "word_unit": "속담",
+          "word_type": "",
+          "pos_info": [
+            {
+              "pos_code": 90022,
+              "pos": "품사 없음",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90023,
+                  "sense_info": [
+                    {
+                      "definition": "말이 순식간에 멀리 퍼진다는 뜻.",
+                      "definition_original": "말이 순식간에 멀리 퍼진다는 뜻.",
+                      "type": "일반어",
+                      "sense_code": 900008
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90027,
+        "word_info": {
+          "word": "손이^크다",
+          "word_unit": "관용구",
+          "word_type": "",
+          "pos_info": [
+            {
+              "pos_code": 90025,
+              "pos": "품사 없음",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90026,
+                  "sense_info": [
+                    {
+                      "definition": "씀씀이가 후하다.",
+                      "definition_original": "씀씀이가 후하다.",
+                      "type": "일반어",
+                      "sense_code": 900009
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90030,
+        "word_info": {
+          "word": "책상",
+          "word_unit": "단어",
+          "word_type": "고유어",
+          "pos_info": [
+            {
+              "pos_code": 90028,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90029,
+                  "sense_info": [
+                    {
+                      "definition": "앉아서 책을 읽거나 글을 쓰는 데 쓰는 상.",
+                      "definition_original": "앉아서 책을 읽거나 글을 쓰는 데 쓰는 상.",
+                      "type": "일반어",
+                      "sense_code": 900010
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90033,
+        "word_info": {
+          "word": "연필",
+          "word_unit": "단어",
+          "word_type": "혼종어",
+          "pos_info": [
+            {
+              "pos_code": 90031,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90032,
+                  "sense_info": [
+                    {
+                      "definition": "흑연을 나무 속에 넣어 만든 필기도구.",
+                      "definition_original": "흑연을 나무 속에 넣어 만든 필기도구.",
+                      "type": "일반어",
+                      "sense_code": 900011
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90036,
+        "word_info": {
+          "word": "나무01",
+          "word_unit": "단어",
+          "word_type": "고유어",
+          "pos_info": [
+            {
+              "pos_code": 90034,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90035,
+                  "sense_info": [
+                    {
+                      "definition": "줄기가 단단한 여러해살이 식물.",
+                      "definition_original": "줄기가 단단한 여러해살이 식물.",
+                      "type": "일반어",
+                      "sense_code": 900012
+                    },
+                    {
+                      "definition": "집이나 가구를 만드는 데 쓰는 재료.",
+                      "definition_original": "집이나 가구를 만드는 데 쓰는 재료.",
+                      "type": "일반어",
+                      "sense_code": 900013
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90039,
+        "word_info": {
+          "word": "-님",
+          "word_unit": "단어",
+          "word_type": "고유어",
+          "pos_info": [
+            {
+              "pos_code": 90037,
+              "pos": "접사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90038,
+                  "sense_info": [
+                    {
+                      "definition": "높임의 뜻을 더하는 접미사.",
+                      "definition_original": "높임의 뜻을 더하는 접미사.",
+                      "type": "일반어",
+                      "sense_code": 900014
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90042,
+        "word_info": {
+          "word": "구름",
+          "word_unit": "단어",
+          "word_type": "고유어",
+          "pos_info": [
+            {
+              "pos_code": 90040,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90041,
+                  "sense_info": [
+                    {
+                      "definition": "",
+                      "definition_original": "",
+                      "type": "일반어",
+                      "sense_code": 900015
+                    },
+                    {
+                      "definition": "공기 중의 물방울이 하늘에 떠 있는 것.",
+                      "definition_original": "공기 중의 물방울이 하늘에 떠 있는 것.",
+                      "type": "일반어",
+                      "sense_code": 900016
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90045,
+        "word_info": {
+          "word": "각본02",
+          "word_unit": "단어",
+          "word_type": "한자어",
+          "pos_info": [
+            {
+              "pos_code": 90043,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90044,
+                  "sense_info": [
+                    {
+                      "definition": "연극이나 영화를 만들기 위하여 쓴 대본.",
+                      "definition_original": "연극이나 영화를 만들기 위하여 쓴 대본.",
+                      "type": "일반어",
+                      "sense_code": 900017,
+                      "lexical_info": [
+                        {
+                          "word": "대본",
+                          "type": "동의어",
+                          "link": "https://stdict.korean.go.kr/search/searchView.do?word_no=200",
+                          "link_target_code": "200"
+                        },
+                        {
+                          "word": "시나리오",
+                          "type": "비슷한말",
+                          "link": "https://stdict.korean.go.kr/search/searchView.do?word_no=201",
+                          "link_target_code": "201"
+                        },
+                        {
+                          "word": "각색",
+                          "type": "반대말",
+                          "link": "https://stdict.korean.go.kr/search/searchView.do?word_no=202",
+                          "link_target_code": "202"
+                        },
+                        {
+                          "word": "연출",
+                          "type": "참고 어휘",
+                          "link": "https://stdict.korean.go.kr/search/searchView.do?word_no=203",
+                          "link_target_code": "203"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90046,
+        "word_info": {
+          "word": "가늘다01",
+          "word_unit": "단어",
+          "word_type": "고유어",
+          "pos_info": [
+            {
+              "pos_code": 90047,
+              "pos": "형용사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90048,
+                  "sense_info": [
+                    {
+                      "definition": "물체의 굵기가 얇거나 작다.",
+                      "definition_original": "물체의 굵기가 얇거나 작다.",
+                      "type": "일반어",
+                      "sense_code": 900018
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "pos_code": 90049,
+              "pos": "보조 형용사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90050,
+                  "sense_info": [
+                    {
+                      "definition": "앞말이 뜻하는 정도가 약함을 나타내는 말.",
+                      "definition_original": "앞말이 뜻하는 정도가 약함을 나타내는 말.",
+                      "type": "일반어",
+                      "sense_code": 900019
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90053,
+        "word_info": {
+          "word": "",
+          "word_unit": "단어",
+          "word_type": "고유어",
+          "pos_info": [
+            {
+              "pos_code": 90051,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90052,
+                  "sense_info": [
+                    {
+                      "definition": "표제어가 비어 있는 깨진 항목.",
+                      "definition_original": "표제어가 비어 있는 깨진 항목.",
+                      "type": "일반어",
+                      "sense_code": 900020
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "target_code": 90056,
+        "word_info": {
+          "word": "깨진표제",
+          "word_unit": "단어",
+          "word_type": "고유어",
+          "pos_info": [
+            {
+              "pos_code": 90054,
+              "pos": "명사",
+              "comm_pattern_info": [
+                {
+                  "pattern_info": [],
+                  "comm_pattern_code": 90055,
+                  "sense_info": [
+                    {
+                      "definition": "코드 없는 뜻풀이.",
+                      "definition_original": "코드 없는 뜻풀이.",
+                      "type": "일반어",
+                      "sense_code": null
+                    },
+                    {
+                      "definition": "정상 뜻풀이.",
+                      "definition_original": "정상 뜻풀이.",
+                      "type": "일반어",
+                      "sense_code": 900021
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

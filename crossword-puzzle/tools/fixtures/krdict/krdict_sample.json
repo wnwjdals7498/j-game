@@ -1,0 +1,866 @@
+{
+  "_fixture_note": "02-01 재조사(2026-09-17) 이후 실데이터 구조를 흉내 낸 손수 만든 샘플. 실데이터가 아니다. docs/plan/02-03.parse-krdict.md, tools/README.md 참조.",
+  "LexicalResource": {
+    "dtdVersion": "18",
+    "GlobalInformation": {
+      "feat": {
+        "att": "languageCoding",
+        "val": "ISO 639-3"
+      }
+    },
+    "Lexicon": {
+      "feat": {
+        "att": "language",
+        "val": "kor"
+      },
+      "LexicalEntry": [
+        {
+          "att": "id",
+          "val": "12300",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "가다01"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "homonym_number",
+              "val": "1"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "동사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "초급"
+            }
+          ],
+          "WordForm": {
+            "feat": [
+              {
+                "att": "type",
+                "val": "발음"
+              },
+              {
+                "att": "pronunciation",
+                "val": "가다"
+              },
+              {
+                "att": "sound",
+                "val": "https://dicmedia.korean.go.kr/sound/00012345.wav"
+              }
+            ]
+          },
+          "Sense": [
+            {
+              "att": "id",
+              "val": "1",
+              "feat": {
+                "att": "definition",
+                "val": "한 곳에서 다른 곳으로 장소를 이동하다."
+              },
+              "SenseRelation": [
+                {
+                  "feat": [
+                    {
+                      "att": "type",
+                      "val": "유의어"
+                    },
+                    {
+                      "att": "lemma",
+                      "val": "이동하다"
+                    }
+                  ]
+                },
+                {
+                  "feat": [
+                    {
+                      "att": "type",
+                      "val": "유의어"
+                    },
+                    {
+                      "att": "lemma",
+                      "val": "향하다"
+                    }
+                  ]
+                },
+                {
+                  "feat": [
+                    {
+                      "att": "type",
+                      "val": "반대말"
+                    },
+                    {
+                      "att": "lemma",
+                      "val": "오다"
+                    }
+                  ]
+                },
+                {
+                  "feat": [
+                    {
+                      "att": "type",
+                      "val": "참고어"
+                    },
+                    {
+                      "att": "lemma",
+                      "val": "다니다"
+                    }
+                  ]
+                }
+              ],
+              "SenseExample": {
+                "feat": [
+                  {
+                    "att": "type",
+                    "val": "문장"
+                  },
+                  {
+                    "att": "example",
+                    "val": "동생이 학교에 간다."
+                  }
+                ]
+              }
+            },
+            {
+              "att": "id",
+              "val": "2",
+              "feat": {
+                "att": "definition",
+                "val": "일정한 목적을 위하여 어디에 참석하다."
+              },
+              "SenseExample": {
+                "feat": [
+                  {
+                    "att": "type",
+                    "val": "문장"
+                  },
+                  {
+                    "att": "example",
+                    "val": "결혼식에 가다."
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "att": "id",
+          "val": "12301",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "가다02"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "homonym_number",
+              "val": "2"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "동사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "중급"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "금이나 줄이 생기다."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20001",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "사람"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            },
+            {
+              "att": "semanticCategory",
+              "val": "개념 > 존재"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "생각을 하고 말을 하며 도구를 만들어 쓰는 동물."
+            },
+            "SenseRelation": {
+              "feat": [
+                {
+                  "att": "type",
+                  "val": "유의어"
+                },
+                {
+                  "att": "lemma",
+                  "val": "인간"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20002",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "나무"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "단단한 줄기를 가지고 여러 해 동안 자라는 식물."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20003",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "학교"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "일정한 목적과 계획에 따라 학생을 가르치는 기관."
+            },
+            "SenseRelation": {
+              "feat": [
+                {
+                  "att": "type",
+                  "val": "유의어"
+                },
+                {
+                  "att": "lemma",
+                  "val": "배움터"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20004",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "사과01"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "homonym_number",
+              "val": "1"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "둥글고 붉으며 단맛이 나는 과일."
+            },
+            "Multimedia": {
+              "feat": [
+                {
+                  "att": "type",
+                  "val": "사진"
+                },
+                {
+                  "att": "url",
+                  "val": "http://dicmedia.korean.go.kr/x.jpg"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20005",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "사과02"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "homonym_number",
+              "val": "2"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": [
+              {
+                "att": "syntacticPattern",
+                "val": "1이 2에/에게 사과하다"
+              },
+              {
+                "att": "definition",
+                "val": "잘못에 대하여 용서를 빎."
+              }
+            ]
+          }
+        },
+        {
+          "att": "id",
+          "val": "20006",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "어머니"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "자기를 낳아 준 여자를 이르는 말."
+            },
+            "SenseRelation": {
+              "feat": [
+                {
+                  "att": "type",
+                  "val": "유의어"
+                },
+                {
+                  "att": "lemma",
+                  "val": "모친"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20007",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "도서관"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "책을 모아 두고 사람들이 읽거나 빌릴 수 있게 한 시설."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20008",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "김치찌개"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "김치를 넣고 끓인 찌개."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20009",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "예쁘다"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "형용사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "생긴 모양이 보기 좋고 곱다."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20010",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "빨리"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "부사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "걸리는 시간이 짧게."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20011",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "대한민국"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "homonym_number",
+              "val": "0"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "origin",
+              "val": "大韓民國"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            },
+            {
+              "att": "semanticCategory",
+              "val": "개념 > 지역"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "동아시아의 한반도 남쪽에 있는 나라."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20012",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "물"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "강, 호수, 바다 등에 있으며 빛깔과 냄새가 없는 액체."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20013",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "국제연합기구"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "여러 나라가 모여 만든 국제적인 조직."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20014",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "PC방"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "컴퓨터를 이용할 수 있게 해 주고 돈을 받는 가게."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20002",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "나무를 심다"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "관용구"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "미래를 위해 준비하다."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20016",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "발 없는 말이 천 리 간다"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "속담"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "말은 비록 발이 없지만 순식간에 멀리 퍼진다는 뜻."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20019",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": "다고"
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "문법‧표현"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "품사 없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "인용을 나타내는 연결 어미."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20020",
+          "Lemma": [
+            {
+              "feat": {
+                "att": "writtenForm",
+                "val": "돈가스"
+              }
+            },
+            {
+              "feat": {
+                "att": "variant",
+                "val": "돈까스"
+              }
+            }
+          ],
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "얇게 저민 돼지고기에 밀가루, 달걀, 빵가루를 입혀 튀긴 요리."
+            }
+          }
+        },
+        {
+          "att": "id",
+          "val": "20021",
+          "Lemma": {
+            "feat": {
+              "att": "writtenForm",
+              "val": ""
+            }
+          },
+          "feat": [
+            {
+              "att": "lexicalUnit",
+              "val": "단어"
+            },
+            {
+              "att": "partOfSpeech",
+              "val": "명사"
+            },
+            {
+              "att": "vocabularyLevel",
+              "val": "없음"
+            }
+          ],
+          "Sense": {
+            "att": "id",
+            "val": "1",
+            "feat": {
+              "att": "definition",
+              "val": "표제어가 비어 있는 깨진 항목."
+            }
+          }
+        }
+      ]
+    }
+  }
+}

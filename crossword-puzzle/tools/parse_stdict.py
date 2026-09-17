@@ -1,103 +1,139 @@
-"""표준국어대사전 XML -> build/entries.stdict.jsonl (02-04).
+"""표준국어대사전 JSON -> build/entries.stdict.jsonl (02-04).
+
+02-01 재조사(2026-09-17) 결과 원본은 XML 이 아니라 JSON 이고, 구조는 기초사전(LMF/att-val)과
+전혀 다른 평평한 형태다: `{"channel": {"total": N, "item": [...]}}`.
+`item[].word_info.word` 가 표제어, `word_info.pos_info[]` (품사별로 여러 개 가능) 안에
+`comm_pattern_info[].sense_info[]` 가 뜻풀이 목록이다. 자세한 경로는 tools/README.md
+"실제 파일 구조 조사 결과 -> 2. 표준국어대사전" 참조.
 
 출력 스키마는 02-03(기초사전)과 완전히 같다. `source` 와 `sense_id` 접두어만 다르다.
-필드 경로는 tools/README.md "실제 파일 구조 조사 결과 -> 2. 표준국어대사전" 절 기준.
-예문·발음/음성·이미지는 라이선스 비개방(DESIGN 6절)이라 읽지도 저장하지도 않는다.
+예문(example_info)·발음(pronunciation_info)·이미지(multimedia_info)는 라이선스 비개방
+(DESIGN 6절)이라 읽지도 저장하지도 않는다 — 아래 코드가 그 키를 참조하지 않는다.
 
+파일당 최대 ~10MB(88개 파일, 총 ~789MB)라 파일 하나씩 `json.load` 로 통째로 읽는다.
 표준은 DESIGN 2절상 "보충" 자료다. 원본이 없어도 빈 파일을 내고 파이프라인은 계속 돈다.
 """
-import xml.etree.ElementTree as ET
+import json
+import re
 from pathlib import Path
+
 from . import config, io_util
 
 OUT = "entries.stdict.jsonl"
 
-ITEM = "item"          # README: 루트 <channel> / 항목 <item>
-
-# 02-04 "표준 고유 필터" 표. 옛말·북한어는 한 칸(drop_old)으로 센다.
-DROP_WORD_TYPES = {"방언", "옛말", "북한어"}
 DROP_WORD_UNITS = {"구", "속담", "관용구"}
+
+# 유의어로 인정하는 lexical_info 관계 유형. 02-01 재조사 결과 실제 값 분포는
+# 동의어(162,127) > 비슷한말(26,264) > 반대말 > 준말 > 본말 > 높임말 > 낮춤말 > 참고 어휘
+# 다 — "비슷한말"만 있는 게 아니라 "동의어"가 압도적으로 많다. 둘 다 유의어로 인정하고,
+# "참고 어휘"(단순 관련어)와 "반대말"은 제외한다.
+SYNONYM_RELATION_TYPES = {"동의어", "비슷한말"}
+
+# 실데이터에는 동형어 번호를 담는 별도 필드가 없다(00-01/02-01: 전수 스캔 436,587건 중 0건).
+# `word` 문자열 끝의 숫자(전부 2자리, 예: "각본01")로만 존재한다. raw_headword 는 원문
+# 그대로 두고(02-04 "여기서 고치지 않는다"), 이 값을 `homonym` 필드로 "분리"만 한다.
+_HOMONYM_SUFFIX = re.compile(r"(\d+)$")
 
 # 전문어(cat_info)는 아직 거르지 않는다 — 02-04 "막히면": 일단 약하게 걸고
 # 02-10 눈 검수 · 03-05 실패율을 보고 조인다. 처음부터 세게 걸면 되돌리기 어렵다.
-# "채움 풀이 남아돈다"로 판정되면 여기를 True 로 바꾸는 게 첫 번째 손잡이다.
+# 02-01 재조사: cat_info 는 sense_info 46%(509,143건 중 236,739건)에 붙어 있는 폭넓은
+# "주제 분야" 태그(역사·불교·인명·식물·화학...)라 존재만으로 거르면 절반 가까이 날아간다.
 DROP_TECHNICAL = False
+
+# --- 02-01 재조사 결과: "방언/옛말/북한어" 판정 필드는 존재하지 않는다 -----------------
+# 00-01/02-04 는 `word_info.word_type`(예: "방언") 또는 `dialect_info` 존재로 방언·옛말·
+# 북한어를 거르라고 했으나, 실데이터(436,587항목) 전수 스캔 결과:
+#   - `word_type` 은 어원 유형(고유어/한자어/외래어/혼종어/'')일 뿐 방언·옛말·북한어 값이
+#     전혀 없다.
+#   - `dialect_info`/`region_info` 필드 자체가 어디에도 없다.
+#   - `sense_info.type` 은 전 항목이 "일반어"로 고정(509,143/509,143)이다.
+#   - 정의문 텍스트도 "'OO'의 방언"/"'OO'의 옛말" 패턴이 0건이다(있는 건 "방언"이라는
+#     개념을 설명하는 표제어 자체뿐 -- 예: '방언02'="...양웅이 엮은 책...").
+#   - "북한" 이 들어간 정의문은 대부분 북한 소재 지명의 행정구역 연혁 설명이라 오탐이 크다.
+# 즉 이 다운로드본에는 방언/옛말/북한어를 가려낼 근거가 없다. 코드로 억지로 걸지 않고
+# 02-04 문서의 "표준 고유 필터" 표에서 해당 행을 제거했다(02-01 6절: "코드로 땜질하지
+# 않는다"). 구·속담·관용구 제외(word_unit, 신뢰 가능)만 남는다.
 
 
 def _src_files(use_fixtures: bool) -> list[Path]:
     base = config.FIXTURES if use_fixtures else config.RAW
-    d = base / "stdict"
-    if not d.exists():
-        d = base
-    return sorted(d.glob("*.xml"))
+    if use_fixtures:
+        d = base / "stdict"
+        if not d.exists():
+            d = base
+        return sorted(d.glob("*.json"))
+    # 실데이터 폴더명은 "전체 내려받기_표준국어대사전_JSON_<날짜>" 처럼 날짜가 섞여 있고
+    # 이름 변경이 금지돼 있다(00-01) -> 하위 경로 전부에서 "표준국어대사전" 이 들어간
+    # json 만 재귀로 찾는다(기초사전 json 과 섞이지 않도록).
+    return sorted(p for p in base.rglob("*.json") if "표준국어대사전" in str(p))
 
 
 def _new_stats() -> dict:
-    # total/drop_* 는 <item> 개수, kept 는 출력 행 수(뜻풀이 개수)다.
-    return {"total": 0, "kept": 0, "drop_dialect": 0, "drop_old": 0,
-            "drop_technical": 0, "drop_phrase": 0}
+    return {"total": 0, "kept": 0, "drop_phrase": 0, "drop_technical": 0}
+
+
+def _extract_homonym(word: str) -> str | None:
+    m = _HOMONYM_SUFFIX.search(word)
+    return m.group(1) if m else None
+
+
+def _sense_synonyms(sense: dict) -> list[str]:
+    syns = [
+        (li.get("word") or "").strip()
+        for li in sense.get("lexical_info") or []
+        if li.get("type") in SYNONYM_RELATION_TYPES
+    ]
+    return [s for s in syns if s]
+
+
+def parse_item(item: dict, stats: dict) -> list[dict]:
+    wi = item.get("word_info") or {}
+    raw = (wi.get("word") or "").strip()
+    if not raw:
+        return []
+
+    word_unit = wi.get("word_unit")
+    if word_unit in DROP_WORD_UNITS:
+        stats["drop_phrase"] += 1
+        return []
+
+    homonym = _extract_homonym(raw)
+
+    out = []
+    # pos_info 가 여러 개일 수 있다(품사가 둘 이상인 표제어, 실측 439,566/436,587개
+    # pos_info -- 약 3천 개 항목이 품사를 둘 이상 갖는다). 각 pos_info 소속 sense_info 는
+    # 그 pos_info 의 pos 를 써야 한다 -- 첫 pos_info 의 pos 하나로 전부 라벨링하면 틀린다.
+    for pinfo in wi.get("pos_info") or []:
+        pos = pinfo.get("pos") or ""
+        for cpinfo in pinfo.get("comm_pattern_info") or []:
+            for sinfo in cpinfo.get("sense_info") or []:
+                if DROP_TECHNICAL and sinfo.get("cat_info"):
+                    stats["drop_technical"] += 1
+                    continue
+                sense_code = sinfo.get("sense_code")
+                definition = (sinfo.get("definition") or "").strip()
+                if sense_code is None or not definition:
+                    continue
+                out.append({
+                    "source": "stdict",
+                    "sense_id": f"stdict:{sense_code}",
+                    "raw_headword": raw,
+                    "homonym": homonym,
+                    "pos": pos,
+                    "word_type": word_unit,
+                    "definition": definition,
+                    "synonyms": _sense_synonyms(sinfo),
+                })
+    return out
 
 
 def iter_entries(path: Path, stats: dict):
-    """iterparse 스트리밍. 수백 MB 파일이라 전체 로드 금지."""
-    for ev, el in ET.iterparse(path, events=("end",)):
-        if el.tag != ITEM:
-            continue
+    """`json.load` 로 파일 하나를 통째로 읽는다. 파일당 최대 ~10MB 라 스트리밍이 필요 없다
+    (02-01: "대용량 실파일은 파일 하나씩 열고 처리하는 방식으로 충분하다")."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    for item in data["channel"]["item"]:
         stats["total"] += 1
-        yield from _parse_item(el, stats)
-        el.clear()          # 메모리 해제. 없으면 수백 MB 파일에서 터진다
-
-
-def _drop_reason(el, word_type: str, word_unit: str | None) -> str | None:
-    if word_type == "방언" or el.find("word_info/dialect_info") is not None:
-        return "drop_dialect"
-    if word_type in DROP_WORD_TYPES:            # 옛말·북한어
-        return "drop_old"
-    if DROP_TECHNICAL and el.find("word_info/cat_info") is not None:
-        return "drop_technical"
-    if word_unit in DROP_WORD_UNITS:
-        return "drop_phrase"
-    return None
-
-
-def _parse_item(el, stats: dict) -> list[dict]:
-    raw = (el.findtext("word_info/word") or "").strip()
-    if not raw:
-        return []
-    # 표제어의 `^`(띄어쓰기 표시)·`-`(접사)·동형어 번호는 여기서 고치지 않는다. 판정은 02-06.
-    src_word_type = (el.findtext("word_info/word_type") or "").strip()
-    word_unit = (el.findtext("word_info/word_unit") or "").strip() or None
-
-    reason = _drop_reason(el, src_word_type, word_unit)
-    if reason:
-        stats[reason] += 1
-        return []
-
-    homonym = (el.findtext("word_info/homonym_num") or "").strip() or None
-    pos = (el.findtext("word_info/pos") or "").strip()
-
-    out = []
-    for sense in el.findall("word_info/pos_info/comm_pattern_info/sense_info"):
-        sid = (sense.findtext("sense_code") or "").strip()
-        definition = (sense.findtext("definition") or "").strip()
-        if not sid or not definition:
-            continue
-        syns = [
-            (r.findtext("word") or "").strip()
-            for r in sense.findall("rel_info")
-            if (r.findtext("type") or "").strip() == "비슷한말"
-        ]
-        out.append({
-            "source": "stdict",
-            "sense_id": f"stdict:{sid}",
-            "raw_headword": raw,
-            "homonym": homonym,
-            "pos": pos,
-            "word_type": word_unit,
-            "definition": definition,
-            "synonyms": [s for s in syns if s],
-        })
-    return out
+        yield from parse_item(item, stats)
 
 
 def run(use_fixtures: bool = False) -> int:

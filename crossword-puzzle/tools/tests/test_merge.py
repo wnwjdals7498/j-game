@@ -211,16 +211,19 @@ def fixture_run(tmp_path, monkeypatch, capsys):
 
 
 def test_fixture_end_to_end(fixture_run):
-    """샘플 normalized 20행 -> 16 표제어 (`사람`·`나무` 가 양쪽, `사과` 가 동음이의어)."""
+    """샘플 normalized 23행 -> 19 표제어 (`사람`·`나무` 가 양쪽, `사과` 가 동음이의어).
+
+    02-01 재조사(2026-09-17)로 픽스처가 JSON/xlsx/xls 구조로 갈아엎이며 숫자도 바뀌었다.
+    """
     rows, log = fixture_run
-    assert len(rows) == 16
+    assert len(rows) == 19
     assert [r["headword"] for r in rows] == sorted(r["headword"] for r in rows)
-    assert re.search(r"merge: 16 words", log)
-    assert re.search(r"기초사전만 6 / 표준만 8 / 양쪽 2", log)
+    assert re.search(r"merge: 19 words", log)
+    assert re.search(r"기초사전만 7 / 표준만 10 / 양쪽 2", log)
 
     by = _by_hw(rows)
     assert by["사람"]["source"] == 3
     assert by["사람"]["senses"][0]["synonyms"] == ["인간"]
     assert by["사과"]["senses"][0]["definition"] == "둥글고 붉으며 단맛이 나는 과일."
-    assert by["사과"]["freq_rank"] == 25 and by["사과"]["vocab_grade"] == "A"
+    assert by["사과"]["freq_rank"] == 30 and by["사과"]["vocab_grade"] == "A"
     assert by["심근경색"]["freq_rank"] is None

@@ -126,11 +126,14 @@ def fixture_rows(fixture_run):
 
 
 def test_fixture_end_to_end_counts(fixture_run):
-    """샘플 32행(기초 20 + 표준 12) -> 20행. tools/README.md "정규화 실적 (02-06)" 표의 근거."""
+    """샘플 37행(기초 21 + 표준 16) -> 23행. tools/README.md "정규화 실적 (02-06)" 표의 근거.
+
+    02-01 재조사(2026-09-17)로 픽스처가 JSON 구조로 갈아엎이며 숫자도 바뀌었다.
+    """
     rows, log = fixture_run
-    assert len(rows) == 20
+    assert len(rows) == 23
     assert _log_counts(log) == {
-        "in": 32, "out": 20, "F1": 5, "F2": 2, "F3": 5, "F4": 0, "F5": 0}
+        "in": 37, "out": 23, "F1": 4, "F2": 2, "F3": 8, "F4": 0, "F5": 0}
 
 
 def test_output_schema(fixture_rows):

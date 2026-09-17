@@ -1,1 +1,3 @@
 pytest
+openpyxl   # 02-01: 빈도 조사(일반어휘통계.xlsx) 읽기
+xlrd       # 02-01: 학습용 어휘 목록(.xls, 레거시 BIFF) 읽기 -- xlrd 2.x는 .xlsx를 못 읽는다

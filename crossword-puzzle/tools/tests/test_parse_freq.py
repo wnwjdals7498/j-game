@@ -1,9 +1,13 @@
-"""02-05 빈도 파서 테스트. 픽스처: tools/fixtures/freq_sample.csv
+"""02-05 빈도 파서 테스트. 픽스처: tools/fixtures/freq_sample.xlsx
 
-샘플은 손수 만든 것이며 실데이터가 아니다 (00-01 승인 대기, tools/README.md 참조).
+02-01 재조사(2026-09-17)로 원본이 csv 가 아니라 xlsx 임이 확인되어 픽스처와 파서를
+함께 갈아엎었다. 샘플은 손수 만든 것이며 실데이터가 아니다(tools/README.md 참조).
+xlsx 는 숫자 셀이 이미 int/float 라 csv 의 "천단위 구분자"·"인코딩 판별" 문제 자체가
+없다 — 관련 테스트는 이번 픽스처에서 뺐다(해당 없음, tools/README.md 02-05 절 참고).
 """
 import json
 
+import openpyxl
 import pytest
 
 from tools import config, io_util
@@ -11,11 +15,9 @@ from tools.parse_freq import OUT, _to_int, run
 
 ALLOWED_KEYS = {"headword", "rank", "count"}
 
-FIXTURE = config.FIXTURES / "freq_sample.csv"
-
 
 def _run(tmp_path, monkeypatch, src=None) -> list[dict]:
-    """src 를 주면 그 폴더를 픽스처로 쓴다 (인코딩 테스트용)."""
+    """src 를 주면 그 폴더를 픽스처로 쓴다."""
     if src is not None:
         monkeypatch.setattr(config, "FIXTURES", src)
     monkeypatch.setattr(config, "BUILD", tmp_path / "build")
@@ -25,9 +27,13 @@ def _run(tmp_path, monkeypatch, src=None) -> list[dict]:
     return rows
 
 
-def _write(path, text, encoding="utf-8"):
+def _write_xlsx(path, rows):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(text.encode(encoding))
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    for r in rows:
+        ws.append(r)
+    wb.save(path)
 
 
 @pytest.fixture
@@ -40,9 +46,9 @@ def _by_word(rows) -> dict[str, dict]:
 
 
 def test_basic_parse_row_count(rows):
-    """샘플 100행 중 `사람` 이 2번(명사/의존명사) 나오므로 99개 표제어."""
-    assert len(rows) == 99
-    assert len(_by_word(rows)) == 99
+    """픽스처 11행 중 '사람'(순위100 중복)·'가02'·'사과02'가 정규화 후 중복이라 8행."""
+    assert len(rows) == 8
+    assert len(_by_word(rows)) == 8
 
 
 def test_schema(rows):
@@ -53,11 +59,23 @@ def test_schema(rows):
         assert isinstance(r["count"], int)
 
 
-def test_thousands_separator(rows):
-    """`"62,384"` -> 62384 (샘플 100행 중 10행이 천단위 구분자)."""
+def test_xlsx_numeric_cells_need_no_comma_parsing(rows):
+    """xlsx 숫자 셀은 이미 int 다 — csv 의 "62,384" 같은 문자열 파싱이 필요 없다."""
     assert _by_word(rows)["사람"]["count"] == 62384
-    assert _to_int("1,234") == 1234
-    assert _to_int("") is None and _to_int(None) is None and _to_int("없음") is None
+    assert _to_int("1,234") == 1234, "방어적으로는 여전히 천단위 구분자 문자열도 받는다"
+    assert _to_int(None) is None and _to_int("없음") is None
+    assert _to_int(1234.0) == 1234, "xlrd 계열 float 셀도 받는다"
+
+
+def test_headword_normalized_before_matching(rows):
+    """어휘 컬럼에 동형어 번호가 붙어 있다(예 '가01') — merge.py 가 기대하는 정규화된
+    표제어와 맞추려면 파서 단계에서 normalize_headword 를 적용해야 한다(02-07.merge.md
+    "막히면"). '가01'(순위2)·'가02'(순위3) 는 둘 다 "가"로 정규화되고 더 좋은 순위가 남는다.
+    """
+    by = _by_word(rows)
+    assert "가01" not in by and "가02" not in by
+    assert by["가"]["rank"] == 2
+    assert by["사과"]["rank"] == 30, "사과01(순위30)·사과02(순위31) 정규화 후 30만 남음"
 
 
 def test_duplicate_headword_keeps_best_rank(rows):
@@ -77,7 +95,7 @@ def test_uses_rank_column_when_present(rows):
 def test_assigns_rank_when_column_missing(tmp_path, monkeypatch):
     """순위 컬럼이 없으면 count 내림차순으로 1부터 부여한다."""
     src = tmp_path / "src"
-    _write(src / "freq.csv", "어휘,빈도\n나무,10\n사람,30\n하늘,20\n")
+    _write_xlsx(src / "freq.xlsx", [("어휘", "빈도"), ("나무", 10), ("사람", 30), ("하늘", 20)])
     rows = _run(tmp_path, monkeypatch, src)
     assert {r["headword"]: r["rank"] for r in rows} == {"사람": 1, "하늘": 2, "나무": 3}
     assert min(r["rank"] for r in rows) == 1
@@ -86,29 +104,11 @@ def test_assigns_rank_when_column_missing(tmp_path, monkeypatch):
 def test_ties_get_same_rank(tmp_path, monkeypatch):
     """동률은 같은 순위. 그 뒤 rank 가 건너뛰어도 무방하다 (02-08은 정규화만)."""
     src = tmp_path / "src"
-    _write(src / "freq.csv", "어휘,빈도\n가,30\n나,20\n다,20\n라,10\n")
+    _write_xlsx(src / "freq.xlsx",
+                [("어휘", "빈도"), ("가", 30), ("나", 20), ("다", 20), ("라", 10)])
     ranks = {r["headword"]: r["rank"] for r in _run(tmp_path, monkeypatch, src)}
     assert ranks["나"] == ranks["다"] == 2
     assert ranks == {"가": 1, "나": 2, "다": 2, "라": 4}
-
-
-def test_reads_cp949(tmp_path, monkeypatch, capsys):
-    """국립국어원 csv 는 CP949 인 경우가 많다 (02-05 "인코딩")."""
-    src = tmp_path / "src"
-    _write(src / "freq.csv", "순위,어휘,빈도\n1,사람,999\n", encoding="cp949")
-    rows = _run(tmp_path, monkeypatch, src)
-    assert rows == [{"headword": "사람", "rank": 1, "count": 999}]
-    assert "인코딩=cp949" in capsys.readouterr().out
-
-
-def test_reads_utf8_bom_without_residue(tmp_path, monkeypatch, capsys):
-    """BOM 이 첫 컬럼 이름에 남으면 표제어를 못 읽어 행이 통째로 사라진다."""
-    src = tmp_path / "src"
-    _write(src / "freq.csv", "어휘,순위,빈도\n사람,1,999\n", encoding="utf-8-sig")
-    rows = _run(tmp_path, monkeypatch, src)
-    assert rows == [{"headword": "사람", "rank": 1, "count": 999}]
-    assert "﻿" not in (tmp_path / "build" / OUT).read_text(encoding="utf-8")
-    assert "인코딩=utf-8-sig" in capsys.readouterr().out
 
 
 def test_missing_source_raises(tmp_path, monkeypatch):
@@ -122,7 +122,8 @@ def test_missing_source_raises(tmp_path, monkeypatch):
 
 def test_skips_rows_without_headword(tmp_path, monkeypatch):
     src = tmp_path / "src"
-    _write(src / "freq.csv", "순위,어휘,빈도\n1,사람,999\n2, ,888\n")
+    _write_xlsx(src / "freq.xlsx",
+                [("순위", "어휘", "빈도"), (1, "사람", 999), (2, " ", 888)])
     assert [r["headword"] for r in _run(tmp_path, monkeypatch, src)] == ["사람"]
 
 
@@ -133,8 +134,7 @@ def test_output_is_valid_jsonl_utf8(tmp_path, monkeypatch):
     assert "강아지" in "\n".join(lines), "한글이 이스케이프되면 안 된다"
 
 
-def test_encoding_is_logged(tmp_path, monkeypatch, capsys):
+def test_kept_and_drop_dup_are_logged(tmp_path, monkeypatch, capsys):
     _run(tmp_path, monkeypatch)
     out = capsys.readouterr().out
-    assert "인코딩=utf-8-sig" in out, "성공한 인코딩이 로그에 없다 (02-05 DoD)"
-    assert "'kept': 99" in out and "'drop_dup': 1" in out
+    assert "'kept': 8" in out and "'drop_dup': 3" in out
