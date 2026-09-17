@@ -39,8 +39,10 @@ dependencies:
   sqlite3_flutter_libs: ^0.6.0+eol
   path_provider: ^2.1.6
 
+  # 4단계(04-01) 결정: ChangeNotifier + provider (docs/plan/04-01.app-shell-state.md)
+  provider: ^6.1.0
+
   # 5단계에서 추가: http, crypto
-  # 4단계에서 결정 후 추가: provider 또는 flutter_riverpod
 
 dev_dependencies:
   flutter_test:

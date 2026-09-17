@@ -1,151 +1,109 @@
+// 4단계(04-01) 앱 셸: DB 부트스트랩 → Provider 주입 → 라우팅.
+//
+// 상태 관리는 `ChangeNotifier` + `provider`로 확정했다
+// (docs/plan/04-01.app-shell-state.md "결정: 상태 관리" — 화면 4개·상태 객체 3개
+// 규모라 Riverpod의 코드 생성·프로바이더 계층이 과하다는 문서의 권고를 따른다).
+//
+// `DbBootstrap.open()`(03-02)이 최초 실행 시 10MB를 복사해 수 초 걸릴 수 있다.
+// `runApp` 앞에서 이를 `await`하면 흰 화면이 뜨므로(04-01 "시작 화면·실패 처리"),
+// 문서가 명시한 "2번" 방식대로 `runApp`을 먼저 부르고 `FutureBuilder`로 로딩·에러
+// 화면을 보여준다. 그러려면 `MultiProvider`는 부트스트랩이 끝난 뒤에도
+// `MaterialApp`의 조상이어야 한다 — 그래야 라우트로 이동한 화면에서도 Provider가
+// 보인다(04-01 "막히면": "MultiProvider가 MaterialApp 바깥에 있어야 라우트로
+// 이동한 화면에서도 보인다"). 이 두 요구를 동시에 만족하려면 `FutureBuilder`가
+// 부트스트랩 성공 시 `MultiProvider(child: MaterialApp(...))`를 반환해야 한다 —
+// 문서의 main.dart 스니펫(부트스트랩을 top-level await로 먼저 끝내고
+// `MultiProvider`로 감싼 뒤 `runApp`)과 이어지는 "시작 화면" 절(2번: `runApp` 먼저
+// + `FutureBuilder`)은 그대로 이어붙이면 서로 모순되므로, 문서가 명시적으로
+// 선택한 2번을 기준으로 두 스니펫을 이 형태로 합쳤다.
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import 'data/db/db_bootstrap.dart';
 import 'data/drift_word_repository.dart';
-import 'domain/repository/word_repository.dart';
-import 'ui/debug/benchmark_page.dart';
+import 'data/stat_repository.dart';
+import 'domain/generator/grid_generator.dart';
+import 'ui/bootstrap/bootstrap_pages.dart';
+import 'ui/home/home_page.dart';
+import 'ui/puzzle/puzzle_page.dart';
+import 'ui/result/result_page.dart';
+import 'ui/settings/settings_page.dart';
+import 'ui/state/app_scope.dart';
+import 'ui/state/settings_model.dart';
 
-// 03-05: 실기기 벤치마크 화면(아래 AppBar의 속도계 아이콘)이 실 DB
-// WordRepository를 필요로 해서 여기서 DB를 부트스트랩한다. main.dart 전체는
-// 4단계(04-01 앱 셸·상태 관리)에서 다시 짜인다 — 이 부트스트랩과 진입점은
-// 그때까지의 **임시** 배선이다.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 격자가 정사각형이라 가로 모드에서 얻는 게 없다 (04-01 "세로 고정").
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+  runApp(JGameApp(bootstrap: _bootstrap()));
+}
+
+/// DB 부트스트랩(03-02) → 리포지토리 조립. [JGameApp]의 `FutureBuilder`가 기다린다.
+Future<AppScope> _bootstrap() async {
   final db = await DbBootstrap.open();
-  final repo = DriftWordRepository(db);
-  runApp(MyApp(repo: repo));
+  return AppScope(
+    db: db,
+    words: DriftWordRepository(db),
+    stats: StatRepository(db),
+    generator: GridGenerator(DriftWordRepository(db)),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  final WordRepository repo;
-  const MyApp({super.key, required this.repo});
+/// 화면 4개 라우트 (04-01 "화면 구성"). 퍼즐→결과 전환은 `Navigator.push`로
+/// 인자를 넘긴다(04-05) — 여기 등록은 각 화면에 직접 진입할 수 있게만 한다.
+Map<String, WidgetBuilder> buildRoutes() => {
+      '/': (_) => const HomePage(),
+      '/play': (_) => const PuzzlePage(),
+      '/result': (_) => const ResultPage(),
+      '/settings': (_) => const SettingsPage(),
+    };
 
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: MyHomePage(title: 'Flutter Demo Home Page', repo: repo),
-    );
-  }
-}
+class JGameApp extends StatelessWidget {
+  /// 테스트에서는 실 `DbBootstrap.open()`을 건너뛰고 가짜 [AppScope]를 담은
+  /// Future(완료/미완료/에러)를 바로 주입한다 — 04-01 "막히면":
+  /// "테스트에서는 AppScope를 직접 주입하고 부트스트랩을 건너뛴다."
+  final Future<AppScope> bootstrap;
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title, required this.repo});
+  const JGameApp({super.key, required this.bootstrap});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  /// 03-05 임시 진입점(아래 AppBar 액션)이 벤치마크 화면에 넘길 실 DB repo.
-  final WordRepository repo;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  static const _title = '단어 연상 퀴즈';
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-        actions: [
-          // 03-05 임시 진입점: 실기기 DoD 측정용 벤치마크 화면.
-          // 4단계(04-06)에서 설정 화면 하위로 옮기고 이 버튼은 제거한다.
-          IconButton(
-            icon: const Icon(Icons.speed),
-            tooltip: '벤치마크 (임시 · 03-05)',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => BenchmarkPage(repo: widget.repo),
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+    return FutureBuilder<AppScope>(
+      future: bootstrap,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return MaterialApp(
+            title: _title,
+            home: BootstrapErrorPage(error: snapshot.error!),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const MaterialApp(
+            title: _title,
+            home: BootstrapLoadingPage(),
+          );
+        }
+        return MultiProvider(
+          providers: [
+            Provider<AppScope>.value(value: snapshot.data!),
+            ChangeNotifierProvider(create: (_) => SettingsModel()..load()),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+          child: MaterialApp(
+            title: _title,
+            theme: ThemeData(
+              useMaterial3: true,
+              colorSchemeSeed: Colors.indigo,
+            ),
+            initialRoute: '/',
+            routes: buildRoutes(),
+          ),
+        );
+      },
     );
   }
 }
