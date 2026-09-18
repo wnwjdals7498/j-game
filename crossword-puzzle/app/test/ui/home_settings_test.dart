@@ -31,6 +31,7 @@ import 'package:jgame/domain/generator/grid_generator.dart';
 import 'package:jgame/ui/theme/app_theme.dart';
 import 'package:jgame/domain/levels.dart';
 import 'package:jgame/ui/home/home_page.dart';
+import 'package:jgame/ui/home/level_card.dart';
 import 'package:jgame/ui/puzzle/puzzle_page.dart';
 import 'package:jgame/ui/settings/license_page.dart';
 import 'package:jgame/ui/settings/settings_page.dart';
@@ -144,7 +145,7 @@ void main() {
       await tester.pumpWidget(wrapHome(buildScope(db)));
       await tester.pumpAndSettle();
 
-      expect(find.byType(ListTile), findsNWidgets(levels.length));
+      expect(find.byType(LevelCard), findsNWidgets(levels.length));
     });
 
     testWidgets('레벨 1 항상 해제: 통계 없어도 탭 가능', (tester) async {
@@ -155,7 +156,9 @@ void main() {
       await tester.pumpWidget(wrapHome(buildScope(db)));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text(levels.first.name));
+      // 히어로가 같은 이름(레벨 1)을 표시해 `find.text`가 2개를 찾으므로
+      // 카드로 좁힌다(07-05-03, INV-08 이름 유지).
+      await tester.tap(find.widgetWithText(LevelCard, levels.first.name));
       await tester.pumpAndSettle();
 
       final page = tester.widget<PuzzlePage>(find.byType(PuzzlePage));
@@ -190,7 +193,10 @@ void main() {
 
       expect(find.byIcon(Icons.star), findsOneWidget);
       expect(find.text('+3'), findsOneWidget);
-      expect(find.text('─'), findsOneWidget, reason: '레벨 2: 해제됐으나 미클리어');
+      final card2 = tester.widget<LevelCard>(
+          find.widgetWithText(LevelCard, levels[1].name));
+      expect(card2.status.unlocked && !card2.status.cleared, isTrue,
+          reason: '레벨 2: 해제됐으나 미클리어');
       expect(find.byIcon(Icons.lock), findsNWidgets(levels.length - 2));
     });
 
@@ -222,7 +228,9 @@ void main() {
       await tester.pumpWidget(wrapHome(buildScope(db)));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text(levels.first.name));
+      // 히어로가 같은 이름(레벨 1)을 표시해 `find.text`가 2개를 찾으므로
+      // 카드로 좁힌다(07-05-03, INV-08 이름 유지).
+      await tester.tap(find.widgetWithText(LevelCard, levels.first.name));
       await tester.pumpAndSettle();
 
       final page = tester.widget<PuzzlePage>(find.byType(PuzzlePage));

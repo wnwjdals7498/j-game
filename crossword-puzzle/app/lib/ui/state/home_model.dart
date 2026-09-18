@@ -35,6 +35,16 @@ class HomeModel extends ChangeNotifier {
   List<LevelStatus> statuses = [];
   ({int correct, int wrong, int words})? summary;
 
+  /// 히어로가 가리키는 레벨(07-05-02). 해제·미클리어 첫 레벨, 없으면 마지막 레벨.
+  LevelStatus? get nextLevel =>
+      statuses.where((s) => s.unlocked && !s.cleared).firstOrNull ?? statuses.lastOrNull;
+
+  /// 전 레벨 클리어. 히어로 라벨을 '다시 도전'으로 바꾸는 조건(라벨만, 규칙 추가 아님 — N-04).
+  bool get allCleared => statuses.isNotEmpty && statuses.every((s) => s.cleared);
+
+  /// E-10 대상: 이번 [load]에서 처음 unlocked가 된 레벨 id. 첫 load는 null.
+  int? justUnlockedId;
+
   bool loading = true;
 
   /// 갱신(05-04)으로 `AppScope.db`가 닫힌 뒤 조회하면 여기 담긴다 — 재시작
@@ -70,6 +80,12 @@ class HomeModel extends ChangeNotifier {
         ));
         prevCleared = cleared;
       }
+      // 이전 statuses와 비교해 "이번에 열린" 레벨 1개를 찾는다. 첫 load는 비교 대상이
+      // 없으므로 null — 앱 진입 때마다 해제 연출이 나오면 안 된다(3.3 E-10 "해제된 직후").
+      final prevUnlocked = {for (final s in statuses) s.spec.id: s.unlocked};
+      justUnlockedId = prevUnlocked.isEmpty
+          ? null
+          : out.where((s) => s.unlocked && prevUnlocked[s.spec.id] == false).firstOrNull?.spec.id;
       statuses = out;
     } catch (e) {
       error = e;

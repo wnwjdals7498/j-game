@@ -7,10 +7,44 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/sync/sync_result.dart' show pendingSyncNoticePrefsKey;
+import '../../domain/model/level_spec.dart';
 import '../puzzle/puzzle_page.dart';
 import '../state/app_scope.dart';
 import '../state/home_model.dart';
 import '../state/puzzle_model.dart';
+import '../theme/tokens.dart';
+import 'hero_card.dart';
+import 'level_card.dart';
+import 'stats_row.dart';
+
+/// 본문 최대 폭. 태블릿·웹에서 좌우로 늘어지지 않게 가운데 정렬한다
+/// (UI-GUIDE 4절 "본문 최대 폭": 560).
+const double _maxBodyWidth = 560;
+
+/// 레벨 진입(04-05: 홈이 레벨과 새 seed를 정해 직접 push). 돌아오면 해제·통계가
+/// 달라졌을 수 있어 다시 읽는다 — `ChangeNotifierProvider(create: ...load())`는
+/// 홈 위젯이 살아 있는 동안 재로드하지 않는다.
+void _openLevel(BuildContext context, LevelSpec spec) {
+  final model = context.read<HomeModel>();
+  Navigator.of(context)
+      .push(MaterialPageRoute(
+        builder: (_) => PuzzlePage(spec: spec, seed: newSeed()),
+      ))
+      .then((_) {
+    if (context.mounted) model.load(); // 홈이 이미 사라졌으면 notifyListeners 금지
+  });
+}
+
+/// 레벨 카드 탭(07-05-03). 잠긴 카드도 받아 스낵바 안내를 보여준다(기존 동작 유지).
+void _onCardTap(BuildContext context, LevelStatus s) {
+  if (!s.unlocked) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('이전 레벨을 클리어해야 열립니다')), // INV-09, 글자 무변경
+    );
+    return;
+  }
+  _openLevel(context, s.spec);
+}
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -70,7 +104,7 @@ class _HomeBody extends StatelessWidget {
           ),
         ],
       ),
-      body: model.loading
+      body: model.loading && model.statuses.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : model.error != null
               ? const Center(
@@ -82,127 +116,45 @@ class _HomeBody extends StatelessWidget {
                     ),
                   ),
                 )
-              : Column(
-                  children: [
-                    _SummaryHeader(summary: model.summary),
-                    const Divider(height: 1),
-                    Expanded(
-                      child: ListView.separated(
-                        itemCount: model.statuses.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, i) =>
-                            _LevelRow(status: model.statuses[i]),
-                      ),
+              : Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: _maxBodyWidth),
+                    child: ListView(
+                      padding: const EdgeInsets.all(GameSpace.l),
+                      children: [
+                        if (model.nextLevel != null)
+                          HeroCard(
+                            status: model.nextLevel!,
+                            allCleared: model.allCleared,
+                            onStart: () =>
+                                _openLevel(context, model.nextLevel!.spec),
+                          ),
+                        const SizedBox(height: GameSpace.xl),
+                        StatsRow(summary: model.summary),
+                        const SizedBox(height: GameSpace.l),
+                        const Divider(height: 1),
+                        const SizedBox(height: GameSpace.l),
+                        GridView.count(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.15,
+                          mainAxisSpacing: GameSpace.m,
+                          crossAxisSpacing: GameSpace.m,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(), // 바깥 ListView가 스크롤한다
+                          children: [
+                            for (final s in model.statuses)
+                              LevelCard(
+                                status: s,
+                                justUnlocked: s.spec.id == model.justUnlockedId,
+                                onTap: () => _onCardTap(context, s),
+                              ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
     );
   }
 }
 
-/// 누적 정답률·푼 단어 수 (04-06 "홈 화면" 표 — `StatRepository.summary()`).
-class _SummaryHeader extends StatelessWidget {
-  final ({int correct, int wrong, int words})? summary;
-
-  const _SummaryHeader({required this.summary});
-
-  @override
-  Widget build(BuildContext context) {
-    final s = summary;
-    final total = (s?.correct ?? 0) + (s?.wrong ?? 0);
-    // 제출 기록이 아예 없으면(분모 0) 퍼센트가 정의되지 않는다 — '-'로 표시.
-    final rateText = total == 0 ? '-' : '${(s!.correct / total * 100).round()}%';
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _StatItem(label: '누적 정답률', value: rateText),
-          _StatItem(label: '푼 단어', value: '${s?.words ?? 0}개'),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _StatItem({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(label, style: Theme.of(context).textTheme.bodyMedium),
-        const SizedBox(height: 4),
-        Text(value, style: Theme.of(context).textTheme.headlineSmall),
-      ],
-    );
-  }
-}
-
-/// 레벨 한 줄. 잠금(🔒)/해제-미클리어(─)/클리어(★ + 점수) 3가지 상태
-/// (04-06 "홈 화면" 도식).
-class _LevelRow extends StatelessWidget {
-  final LevelStatus status;
-
-  const _LevelRow({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    final spec = status.spec;
-    final colors = Theme.of(context).colorScheme;
-    final titleColor = status.unlocked ? null : colors.onSurfaceVariant;
-
-    return ListTile(
-      leading: CircleAvatar(child: Text('${spec.id}')),
-      title: Text(spec.name, style: TextStyle(color: titleColor)),
-      trailing: _Trailing(status: status),
-      // 잠긴 레벨도 탭은 받는다 — 스낵바 안내를 보여줘야 하므로
-      // `enabled: false`(InkWell 자체를 죽임)를 쓰지 않는다.
-      onTap: () => _onTap(context),
-    );
-  }
-
-  void _onTap(BuildContext context) {
-    if (!status.unlocked) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('이전 레벨을 클리어해야 열립니다')),
-      );
-      return;
-    }
-    // 새 seed로 퍼즐 화면 진입 (04-05 puzzle_page.dart "실제 진입은 홈이
-    // 레벨과 새 seed를 정해 이 위젯을 직접 생성해 Navigator.push한다").
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => PuzzlePage(spec: status.spec, seed: newSeed()),
-    ));
-  }
-}
-
-class _Trailing extends StatelessWidget {
-  final LevelStatus status;
-
-  const _Trailing({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    if (!status.unlocked) {
-      return const Icon(Icons.lock, semanticLabel: '잠김');
-    }
-    if (status.cleared) {
-      final score = status.bestScore!;
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.star, color: Theme.of(context).colorScheme.tertiary),
-          const SizedBox(width: 4),
-          Text('${score >= 0 ? '+' : ''}$score'),
-        ],
-      );
-    }
-    return const Text('─'); // 해제됐으나 미클리어
-  }
-}

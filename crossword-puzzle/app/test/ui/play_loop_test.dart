@@ -48,6 +48,7 @@ import 'package:jgame/domain/model/level_spec.dart';
 import 'package:jgame/domain/model/puzzle.dart';
 import 'package:jgame/domain/scoring/scorer.dart';
 import 'package:jgame/ui/home/home_page.dart';
+import 'package:jgame/ui/home/level_card.dart';
 import 'package:jgame/ui/puzzle/clue_bar.dart';
 import 'package:jgame/ui/puzzle/grid_view.dart';
 import 'package:jgame/ui/puzzle/puzzle_page.dart';
@@ -142,8 +143,9 @@ void main() {
       await tester.pumpWidget(wrapApp(buildScope(db), const HomePage()));
       await tester.pumpAndSettle();
 
-      // 1. 홈에서 레벨 1 탭
-      await tester.tap(find.text(levels.first.name));
+      // 1. 홈에서 레벨 1 탭 (히어로가 같은 이름을 표시해 find.text가 2개를
+      // 찾으므로 카드로 좁힌다 — 07-05-03, INV-08 이름 유지)
+      await tester.tap(find.widgetWithText(LevelCard, levels.first.name));
       await tester.pumpAndSettle();
       expect(find.byType(PuzzleGridView), findsOneWidget);
 
