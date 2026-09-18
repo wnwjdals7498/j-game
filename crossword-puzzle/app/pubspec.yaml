@@ -103,6 +103,18 @@ flutter:
     - assets/LICENSES.md
     - assets/words.sqlite
 
+  # 7단계(07-02): UI-GUIDE 2.4 타이포. SIL Open Font License 1.1 —
+  # 표기는 docs/LICENSES.md "글꼴" 절. 패키지가 아니라 에셋이므로 INV-11과 무관하다.
+  fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard-Regular.otf
+          weight: 400
+        - asset: assets/fonts/Pretendard-SemiBold.otf
+          weight: 600
+        - asset: assets/fonts/Pretendard-Bold.otf
+          weight: 700
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

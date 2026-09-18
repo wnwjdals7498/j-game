@@ -20,6 +20,12 @@
 ## 4. 한국어 학습용 어휘 목록
 (동일 형식)
 
+## 5. 글꼴 — Pretendard
+- 제공: Kil Hyung-jin (https://github.com/orioncactus/pretendard)
+- 라이선스: SIL Open Font License 1.1 (https://scripts.sil.org/OFL)
+- 표기: Copyright (c) 2021, Kil Hyung-jin (https://github.com/orioncactus/pretendard), with Reserved Font Name Pretendard.
+- 변형 여부: 없음 (static OTF 3종을 그대로 번들)
+
 ## 파생물 라이선스
 본 앱에 동봉된 `words.sqlite` 는 CC BY-SA 2.0 KR 자료의 파생물이므로
 동일 조건(CC BY-SA 2.0 KR)으로 배포됩니다.
