@@ -37,6 +37,7 @@ import 'package:jgame/ui/puzzle/grid_view.dart';
 import 'package:jgame/ui/puzzle/puzzle_page.dart';
 import 'package:jgame/ui/result/result_page.dart';
 import 'package:jgame/ui/state/app_scope.dart';
+import 'package:jgame/ui/theme/app_theme.dart';
 import 'package:jgame/ui/state/puzzle_model.dart';
 import 'package:jgame/ui/state/settings_model.dart';
 
@@ -495,7 +496,10 @@ void main() {
             Provider<AppScope>.value(value: scope),
             ChangeNotifierProvider(create: (_) => SettingsModel()),
           ],
-          child: MaterialApp(home: child),
+          child: MaterialApp(
+            theme: buildLightTheme(), // PuzzlePage → PuzzleGridView가 GameColors.of(context)를 읽는다
+            home: child,
+          ),
         );
 
     testWidgets(

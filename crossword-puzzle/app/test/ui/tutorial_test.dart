@@ -20,6 +20,7 @@ import 'package:jgame/domain/fixtures/dummy_dictionary.dart';
 import 'package:jgame/domain/generator/grid_generator.dart';
 import 'package:jgame/domain/levels.dart';
 import 'package:jgame/ui/puzzle/puzzle_page.dart';
+import 'package:jgame/ui/theme/app_theme.dart';
 import 'package:jgame/ui/state/app_scope.dart';
 import 'package:jgame/ui/state/settings_model.dart';
 
@@ -61,7 +62,10 @@ void main() {
           Provider<AppScope>.value(value: scope),
           ChangeNotifierProvider(create: (_) => SettingsModel()),
         ],
-        child: MaterialApp(home: child),
+        child: MaterialApp(
+          theme: buildLightTheme(), // PuzzleGridView가 GameColors.of(context)를 읽는다
+          home: child,
+        ),
       );
 
   testWidgets('처음 퍼즐에 들어가면 조작법 안내가 한 번 뜬다', (tester) async {

@@ -51,6 +51,7 @@ import 'package:jgame/ui/home/home_page.dart';
 import 'package:jgame/ui/puzzle/grid_view.dart';
 import 'package:jgame/ui/puzzle/hint_panel.dart';
 import 'package:jgame/ui/puzzle/puzzle_page.dart';
+import 'package:jgame/ui/theme/app_theme.dart';
 import 'package:jgame/ui/result/result_page.dart';
 import 'package:jgame/ui/settings/license_page.dart';
 import 'package:jgame/ui/settings/settings_page.dart';
@@ -105,7 +106,10 @@ void main() {
           Provider<AppScope>.value(value: scope),
           ChangeNotifierProvider(create: (_) => SettingsModel()),
         ],
-        child: MaterialApp(home: child),
+        child: MaterialApp(
+          theme: buildLightTheme(), // PuzzleGridView가 GameColors.of(context)를 읽는다
+          home: child,
+        ),
       );
 
   /// home_settings_test.dart(04-06)와 같은 이유: 기본 테스트 뷰포트

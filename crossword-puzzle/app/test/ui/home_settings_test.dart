@@ -28,6 +28,7 @@ import 'package:jgame/data/stat_repository.dart';
 import 'package:jgame/data/sync/sync_result.dart';
 import 'package:jgame/domain/fixtures/dummy_dictionary.dart';
 import 'package:jgame/domain/generator/grid_generator.dart';
+import 'package:jgame/ui/theme/app_theme.dart';
 import 'package:jgame/domain/levels.dart';
 import 'package:jgame/ui/home/home_page.dart';
 import 'package:jgame/ui/puzzle/puzzle_page.dart';
@@ -109,7 +110,10 @@ void main() {
           Provider<AppScope>.value(value: scope),
           ChangeNotifierProvider(create: (_) => SettingsModel()),
         ],
-        child: const MaterialApp(home: HomePage()),
+        child: MaterialApp(
+          theme: buildLightTheme(), // HomePage → PuzzlePage가 GameColors.of(context)를 읽는다
+          home: const HomePage(),
+        ),
       );
 
   /// 기본 테스트 뷰포트(약 800×600)로는 레벨 10줄 + 통계 헤더가 다 안 들어가
