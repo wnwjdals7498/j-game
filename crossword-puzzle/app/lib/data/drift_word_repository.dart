@@ -22,6 +22,11 @@ class DriftWordRepository implements WordRepository {
 
   const DriftWordRepository(this._db);
 
+  /// `coreCandidates`의 SQL 단계 후보 창 크기. `tool/tune_core.dart`로 실 DB
+  /// 스윕한 값 — 원래(`count*12`≈36)보다 넓히되 티어 전체(수천 행)까지는
+  /// 안 간다. 자세한 이유는 `coreCandidates` 본문 주석.
+  static const _coreCandidatePoolSize = 200;
+
   @override
   Future<List<WordEntry>> findByPattern({
     required int length,
@@ -77,6 +82,23 @@ class DriftWordRepository implements WordRepository {
     required int count,
     required int seed,
   }) async {
+    // 예전엔 `LIMIT count*12`(count=3이면 36)를 걸었는데, 점수가 대부분
+    // 0으로 묶여 있으면(막 시작한 기기, 또는 word_stat이 몇 단어만 건드린
+    // 상태) `ORDER BY score ASC, headword ASC`의 동점 tie-break가 결국
+    // "표제어 알파벳순 앞쪽"으로 고정돼 버린다. 한글은 초성 '가'가 가장
+    // 앞이라 이 앞쪽 구간이 '가OO'류 단어로 심하게 쏠려(06단계 실기기 확인
+    // 중 재현 — tier 3 알파벳 앞쪽 40개 중 39개가 '가'로 시작) word_stat이
+    // 하필 그 쏠린 구간의 두 단어를 낮은 점수로 고정하면, 그 둘과 서로
+    // 음절이 겹치는 세 번째 후보가 이 좁은 창 안에 없어 core placement가
+    // 매 시도(seed)마다 결정적으로 실패했다(고립 단어 금지 이후, 01-03
+    // 규칙 5). **LIMIT을 아예 없애 티어 전체를 가져오면 반대로 악화된다**
+    // — '가'로 시작하는 무리가 서로 첫 음절을 공유해 오히려 교차가 쉬웠던
+    // 것이라, 진짜 무작위 표본은 서로 겹치는 음절을 찾을 확률이 더 낮다.
+    // `tool/tune_core.dart`(실 DB 스윕, `docs/reports/03-real-failure.md`
+    // "2026-09-18" 절)로 (SQL LIMIT, 최종 개수 배수) 여러 조합을 실측한
+    // 결과 (200, count*20)만 레벨 6·7(t5×3, 가장 빡빡한 조합)까지
+    // 1000/1000 통과했다 — limit 없음은 6·7에서 20% 실패, (200, count*10)도
+    // 1000회 기준 2% 실패로 DoD(1%)를 못 넘었다.
     const sql = '''
       SELECT w.headword, w.tier, w.pos,
              COALESCE(s.correct, 0) - COALESCE(s.wrong, 0) * 2 AS score
@@ -87,11 +109,9 @@ class DriftWordRepository implements WordRepository {
       LIMIT ?
     ''';
 
-    // 동점 랜덤을 위해 넉넉히 가져온다
-    final take = count * 12;
     final rows = await _db.customSelect(sql, variables: [
       Variable.withInt(tier),
-      Variable.withInt(take),
+      Variable.withInt(_coreCandidatePoolSize),
     ]).get();
 
     // 점수별로 묶어 그룹 안에서만 셔플 → 점수 순서는 유지, 동점만 랜덤
@@ -109,7 +129,9 @@ class DriftWordRepository implements WordRepository {
       final g = byScore[score]!..shuffle(rnd);
       out.addAll(g);
     }
-    return out.take(count * 4).toList();
+    // count*4 → count*20: CorePlacer가 훑을 후보 폭도 같이 넓혀야
+    // 위 셔플 확장이 실제로 연결 가능한 조합을 찾을 기회로 이어진다.
+    return out.take(count * 20).toList();
   }
 
   /// `(len, tier, cN)` 인덱스가 실제로 잡히는지 확인하는 진단용 헬퍼 (03-03).

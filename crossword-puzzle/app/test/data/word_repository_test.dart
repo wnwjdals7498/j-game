@@ -198,6 +198,18 @@ void main() {
       final b = await repo.coreCandidates(tier: 1, count: 2, seed: 7);
       expect(a.map((w) => w.headword).toList(), b.map((w) => w.headword).toList());
     });
+
+    // 06단계 실기기 재현(docs/reports/03-real-failure.md "2026-09-18 추가"):
+    // 후보 창이 좁으면(예전 count*12=36) 점수가 대부분 0으로 묶인 상태에서
+    // 동점 tie-break(headword ASC)가 한글 초성 '가' 쪽으로 심하게 쏠려,
+    // word_stat이 우연히 그 쏠린 구간의 두 단어만 낮은 점수로 고정하면 셋째
+    // 교차 후보를 못 찾아 코어 배치가 결정적으로 실패했다(고립 단어 금지
+    // 이후). 후보 폭 자체가 옛 상한보다 훨씬 넓은지만 확인한다 — 실제
+    // 연결 가능성 검증은 tool/tune_core.dart 실측(리포트)에 있다.
+    test('후보 폭: 옛 상한(count*12)보다 훨씬 넓다', () async {
+      final r = await repo.coreCandidates(tier: 3, count: 3, seed: 1);
+      expect(r.length, greaterThan(3 * 12));
+    });
   });
 
   test('인덱스 사용: explainPattern 결과에 idx_word_c 포함', () async {
