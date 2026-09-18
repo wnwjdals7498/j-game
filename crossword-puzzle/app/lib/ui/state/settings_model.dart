@@ -1,12 +1,13 @@
 // 설정 화면 상태 (04-06). `shared_preferences`에 저장한다 — DB에 넣지 않는 이유는
 // 갱신(05-03)으로 DB가 교체돼도 설정이 살아남아야 하기 때문 (04-06 "설정 저장").
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 힌트 표시 모드. 04-03(단어 선택·힌트 패널)이 이 값을 읽어 힌트 텍스트를 고른다.
 enum HintMode { definition, association }
 
 const _keyHintMode = 'hintMode';
+const _keyThemeMode = 'themeMode';   // 값은 ThemeMode.name ('system' | 'light' | 'dark')
 
 /// `main.dart`의 자동 갱신(05-04)도 `SettingsModel` 인스턴스 없이 이 키로
 /// 직접 읽는다 — 부트스트랩 시점엔 아직 `SettingsModel`이 만들어지기 전이다.
@@ -25,6 +26,7 @@ const tutorialSeenPrefsKey = 'tutorialSeen';
 class SettingsModel extends ChangeNotifier {
   HintMode hintMode = HintMode.definition;
   bool wifiOnlySync = true;
+  ThemeMode themeMode = ThemeMode.system;
 
   bool loading = true;
 
@@ -34,6 +36,12 @@ class SettingsModel extends ChangeNotifier {
     hintMode =
         savedMode == HintMode.association.name ? HintMode.association : HintMode.definition;
     wifiOnlySync = prefs.getBool(wifiOnlySyncPrefsKey) ?? true;
+
+    final savedTheme = prefs.getString(_keyThemeMode);
+    themeMode = ThemeMode.values.firstWhere(
+      (m) => m.name == savedTheme,
+      orElse: () => ThemeMode.system,
+    );
 
     loading = false;
     notifyListeners();
@@ -53,5 +61,13 @@ class SettingsModel extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(wifiOnlySyncPrefsKey, value);
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    if (mode == themeMode) return;
+    themeMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyThemeMode, mode.name);
   }
 }
