@@ -101,6 +101,44 @@ Puzzle _midCrossPuzzle() {
   );
 }
 
+/// `allFilled` 검증용 2×2. 이 파일의 [_crossPuzzle]과 달리 (1,1)을 **검은
+/// 칸**으로 둔다 — `Scorer.blankCellCount`는 단어가 아니라 격자 전체를 훑기
+/// 때문이다 (submit_test.dart `_crossPuzzle` 주석과 같은 근거).
+/// - '사과' 가로 (0,0)~(0,1)
+/// - '사슴' 세로 (0,0)~(1,0) — (0,0)에서 교차
+Puzzle _fullCoverPuzzle() {
+  const cells = [
+    [Cell.filled('사'), Cell.filled('과')],
+    [Cell.filled('슴'), Cell.blocked()],
+  ];
+  return const Puzzle(
+    levelId: 1,
+    width: 2,
+    height: 2,
+    cells: cells,
+    words: [
+      PlacedWord(
+        headword: '사과',
+        row: 0,
+        col: 0,
+        dir: Direction.across,
+        isCore: false,
+        tier: 1,
+      ),
+      PlacedWord(
+        headword: '사슴',
+        row: 0,
+        col: 0,
+        dir: Direction.down,
+        isCore: false,
+        tier: 1,
+      ),
+    ],
+    seed: 1,
+    attempts: 1,
+  );
+}
+
 LevelSpec _spec() => const LevelSpec(
       id: 1,
       name: 'test',
@@ -346,6 +384,75 @@ void main() {
       model.selected = last;
       model.selectNextWord();
       expect(model.selected, same(first));
+    });
+
+    test('이전 단어 순환: 첫 번째 → 마지막', () {
+      final model = newModel()..puzzle = _crossPuzzle();
+      final first = model.puzzle!.words[0];
+      final last = model.puzzle!.words[1];
+      model.selected = first;
+      model.selectPrevWord();
+      expect(model.selected, same(last));
+    });
+
+    test('이전 단어: 미선택이면 마지막 단어', () {
+      final model = newModel()..puzzle = _crossPuzzle();
+      final last = model.puzzle!.words[1];
+      model.selected = null;
+      model.selectPrevWord();
+      expect(model.selected, same(last));
+    });
+
+    test('다음 ↔ 이전 왕복: 원래 단어로 돌아온다', () {
+      final model = newModel()..puzzle = _crossPuzzle();
+      final first = model.puzzle!.words[0];
+      model.selected = first;
+      model.selectNextWord();
+      model.selectPrevWord();
+      expect(model.selected, same(first));
+    });
+  });
+
+  group('PuzzleModel — 진행 계산', () {
+    test('filledWordCount: 입력 없으면 0', () {
+      final model = newModel()..puzzle = _crossPuzzle();
+      expect(model.filledWordCount, 0);
+    });
+
+    test('filledWordCount: 한 단어 완성 → 1', () {
+      final model = newModel()..puzzle = _crossPuzzle();
+      model.setWordInput(model.puzzle!.words[0], '사과');
+      expect(model.filledWordCount, 1);
+    });
+
+    test('filledWordCount: 부분 입력은 세지 않는다', () {
+      final model = newModel()..puzzle = _crossPuzzle();
+      model.setWordInput(model.puzzle!.words[0], '사');
+      expect(model.filledWordCount, 0);
+    });
+
+    test('filledWordCount: 교차 셀 공유로 두 단어가 동시에 참', () {
+      final model = newModel()..puzzle = _fullCoverPuzzle();
+      model.setWordInput(model.puzzle!.words[0], '사과'); // 가로
+      model.setWordInput(model.puzzle!.words[1], '사슴'); // 세로
+      expect(model.filledWordCount, 2);
+    });
+
+    test('allFilled: 빈칸이 있으면 false', () {
+      final model = newModel()..puzzle = _fullCoverPuzzle();
+      model.answers = {(0, 0): '사'};
+      expect(model.allFilled, isFalse);
+    });
+
+    test('allFilled: 모든 비검은 칸을 채우면 true', () {
+      final model = newModel()..puzzle = _fullCoverPuzzle();
+      model.answers = {(0, 0): '사', (0, 1): '과', (1, 0): '슴'};
+      expect(model.allFilled, isTrue);
+    });
+
+    test('allFilled: puzzle이 없으면 false', () {
+      final model = newModel();
+      expect(model.allFilled, isFalse);
     });
   });
 }

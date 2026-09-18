@@ -139,6 +139,19 @@ class PuzzleModel extends ChangeNotifier {
     return buf.toString();
   }
 
+  /// 모든 칸이 채워진 단어 수. 진행 배지 "n / N"의 n (07-04-03).
+  /// [textOf]가 중간 빈칸에서 끊기므로 길이 비교만으로 "꽉 참"을 판정할 수 있다.
+  int get filledWordCount => puzzle == null
+      ? 0
+      : puzzle!.words.where((w) => textOf(w).length == w.length).length;
+
+  /// 격자의 모든 비검은 칸이 채워졌는가. 제출 버튼 E-05의 상태 (07-04-03).
+  /// 단어 단위가 아니라 **칸 단위**로 센다 — 제출 확인 시트의 빈칸 문구가
+  /// 같은 `Scorer.blankCellCount`를 쓰므로(04-05), 기준이 어긋나면 "버튼은
+  /// 기본 스타일인데 시트는 빈 칸이 있다고 말하는" 상태가 생긴다.
+  bool get allFilled =>
+      puzzle != null && Scorer.blankCellCount(puzzle!, answers) == 0;
+
   /// 다음 단어로 이동한다. 번호 순(`puzzle.words` 순서, 04-03 numberCells가
   /// 훑는 순서와 일치)으로 단순 순환한다 — "빈 단어만 순회" 옵션은 04-04
   /// "다음 단어로 이동" 절이 1차 범위 밖으로 미뤘다.
@@ -148,6 +161,19 @@ class PuzzleModel extends ChangeNotifier {
     if (order.isEmpty) return;
     final i = order.indexWhere((w) => _same(w, selected));
     selected = order[(i + 1) % order.length];
+    notifyListeners();
+  }
+
+  /// 이전 단어로 이동한다 (ClueBar ◀, 07-04-02). [selectNextWord]의 역방향.
+  /// 미선택이면 `indexWhere`가 -1을 주는데, 그대로 `(i - 1 + n) % n`에 넣으면
+  /// 끝에서 두 번째가 걸린다 — [selectNextWord]가 미선택에서 첫 단어를 고르는
+  /// 것과 짝이 맞게 마지막 단어로 분기한다.
+  void selectPrevWord() {
+    if (puzzle == null) return;
+    final order = puzzle!.words;
+    if (order.isEmpty) return;
+    final i = order.indexWhere((w) => _same(w, selected));
+    selected = i < 0 ? order.last : order[(i - 1 + order.length) % order.length];
     notifyListeners();
   }
 
