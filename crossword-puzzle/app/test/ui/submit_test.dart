@@ -36,6 +36,7 @@ import 'package:jgame/domain/scoring/scorer.dart';
 import 'package:jgame/ui/puzzle/grid_view.dart';
 import 'package:jgame/ui/puzzle/puzzle_page.dart';
 import 'package:jgame/ui/result/result_page.dart';
+import 'package:jgame/ui/result/word_result_card.dart';
 import 'package:jgame/ui/state/app_scope.dart';
 import 'package:jgame/ui/theme/app_theme.dart';
 import 'package:jgame/ui/state/puzzle_model.dart';
@@ -290,7 +291,8 @@ void main() {
   });
 
   group('결과 화면 (ResultPage)', () {
-    Widget wrap(Widget child) => MaterialApp(home: child);
+    // 07-06-01: ResultPage → ScoreHeader가 GameColors.of(context)를 읽는다.
+    Widget wrap(Widget child) => MaterialApp(theme: buildLightTheme(), home: child);
 
     testWidgets('결과 목록: 단어 수만큼 행, 번호 순으로 정렬', (tester) async {
       await tester.pumpWidget(wrap(ResultPage(
@@ -299,7 +301,8 @@ void main() {
         result: _threeWordResult(),
       )));
 
-      expect(find.byType(ListTile), findsNWidgets(3));
+      await tester.pumpAndSettle(); // E-07이 끝난 뒤 y좌표를 읽는다
+      expect(find.byType(WordResultCard), findsNWidgets(3));
 
       // 번호 순(위→아래): 나무(0행) → 바나나(1행) → 사과(2행). `puzzle.words`
       // 등록 순서(사과·나무·바나나)와 다르므로, 실제로 다시 정렬됐을 때만

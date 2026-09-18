@@ -76,8 +76,14 @@ const rules = <Rule>[
       paths: ['lib/ui/puzzle/grid_painter.dart'], needles: ['.headword']),
   Rule('INV-04a', '격자 정답/오답 모양 구분', Kind.mustContain,
       paths: ['lib/ui/puzzle/grid_painter.dart'], needles: ['drawCircle', 'drawLine']),
+  // 07-06-02: 아이콘 판정 코드가 result_page.dart의 `_WordRow`에서
+  // word_result_card.dart의 `WordResultCard`로 옮겨갔다(문서 스켈레톤이 그
+  // 위치에 그대로 두라고 못박은 코드). UI-GUIDE.md INV-04 표의 "검사 방법"
+  // 문구(`result_page.dart`)는 그 개정을 아직 반영하지 못했다 — 문서 잠금
+  // 때문에 여기서 같이 고치지 못했으니, 사람이 같은 커밋에서 표도 맞춰야 한다.
   Rule('INV-04b', '결과 정답/오답 아이콘 구분', Kind.mustContain,
-      paths: ['lib/ui/result/result_page.dart'], needles: ['Icons.check_circle', 'Icons.cancel']),
+      paths: ['lib/ui/result/word_result_card.dart'],
+      needles: ['Icons.check_circle', 'Icons.cancel']),
   Rule('INV-05', '하드코딩 색 금지', Kind.mustNotContain,   // transparent는 실행기가 허용
       paths: ['lib/ui', 'lib/main.dart'], exclude: ['lib/ui/theme/'],
       needles: ['Color(0x', 'Colors.']),
