@@ -7,11 +7,24 @@ import 'package:jgame/domain/generator/filler.dart';
 import 'package:jgame/domain/generator/grid.dart';
 import 'package:jgame/domain/generator/grid_rules.dart';
 import 'package:jgame/domain/model/level_spec.dart';
+import 'package:jgame/domain/model/puzzle.dart';
+import 'package:jgame/domain/model/word_entry.dart';
 
 import 'package:jgame/domain/fixtures/dummy_dictionary.dart';
 
 /// 채움만 보는 스펙. 코어는 [coreGrid] 가 같은 스펙으로 먼저 깐다.
-LevelSpec testSpec(List<TierQuota> fillQuotas, {int backtrackBudget = 200}) =>
+///
+/// `allowIsolated: true`를 명시한다 — 이 파일의 `coreSeed=7` 픽스처는 코어
+/// 2개가 서로 고립되게(연결 요소 2개) 일부러 골라, 채움 단계의 고립 가드와
+/// 예산 소진 메커니즘을 검증한다(아래 "코어 2개가 서로 고립된 격자" 주석).
+/// `LevelSpec.allowIsolated`의 기본값이 바뀌어도(퍼즐 규칙: 고립 단어 금지)
+/// 이 테스트들의 의도(연결성 규칙과 무관한 예산·캐시 메커니즘)는 그대로
+/// `allowIsolated: true`인 픽스처로 검증해야 한다.
+LevelSpec testSpec(
+  List<TierQuota> fillQuotas, {
+  int backtrackBudget = 200,
+  bool allowIsolated = true,
+}) =>
     LevelSpec(
       id: 1,
       name: 'test',
@@ -21,6 +34,7 @@ LevelSpec testSpec(List<TierQuota> fillQuotas, {int backtrackBudget = 200}) =>
       coreCount: 2,
       fillQuotas: fillQuotas,
       backtrackBudget: backtrackBudget,
+      allowIsolated: allowIsolated,
     );
 
 /// 코어만 놓인 격자. 01-07이 할 일을 테스트에서 미리 손으로 한다.
@@ -185,5 +199,31 @@ void main() {
     expect(stats.success, isFalse);
     expect(stats.achieved[5], 0);
     expect(dump(g), before);
+  });
+
+  test('교차 불가능한 채움 후보는 애초에 슬롯에 안 맞아 실패 (allowIsolated 무관)', () async {
+    // 코어 '사과'만 손으로 미리 놓는다. 채움 후보 '기린'은 사·과 어느 음절도
+    // 공유하지 않는다 — `SlotEnumerator`의 슬롯 조건("구간 안에 채워진 칸이
+    // 1개 이상", 채움은 항상 기존 칸과 교차)때문에 애초에 '기린'이 들어갈
+    // 슬롯 자체가 열거되지 않는다. `allowIsolated`를 켜도 결과는 같다 —
+    // 채움 단계는 격자에 없던 고립 단어를 새로 만들 수 없다(구조적 보장).
+    final g = MutableGrid(7, 7);
+    g.place(const PlacedWord(
+      headword: '사과',
+      row: 0,
+      col: 0,
+      dir: Direction.across,
+      isCore: true,
+      tier: 1,
+    ));
+    final isolatedOnlyRepo =
+        InMemoryWordRepository([WordEntry(headword: '기린', tier: 1, pos: '명사')]);
+    final spec = testSpec(const [TierQuota.exact(1, 1)], backtrackBudget: 50);
+
+    final stats = await Filler(g, spec, isolatedOnlyRepo, Random(1)).run();
+
+    expect(stats.success, isFalse);
+    expect(stats.achieved[1], 0);
+    expect(g.placed.length, 1, reason: '코어 하나만 남아야 한다(채움 실패 시 원복)');
   });
 }

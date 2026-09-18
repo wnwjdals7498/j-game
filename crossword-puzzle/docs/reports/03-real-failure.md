@@ -243,3 +243,52 @@ SDK 체크아웃과 번들 Dart SDK 사이 버전 어긋남으로 보이며, 이
 `test/data/word_repository_test.dart` 등 이번 작업이 실제로 건드린 범위의
 테스트는 전부 통과했다. 이 SDK 어긋남 자체의 수리는 이번 작업 범위 밖이라
 손대지 않았다.
+
+## 2026-09-18 업데이트 — 고립 단어 전면 금지 재측정
+
+**변경**: `LevelSpec.allowIsolated` 기본값을 `true`(고립 단어 최대 1개
+허용)에서 `false`(전부 하나의 연결 요소)로 바꿨다 — 사용자 요청("단일
+단어는 없게 하자, 못해도 하나는 같이 붙어 있는 걸로"). 01-03 규칙 5를
+되돌렸다(`docs/plan/01-03.grid-rules.md`, `docs/DESIGN.md` 5절 3번도 갱신).
+`levels.dart`의 10개 레벨 전부 이 필드를 명시하지 않고 기본값에 기대므로,
+이 한 줄로 전 레벨에 적용된다.
+
+**같이 확인한 것**: `Filler._isolationOk()`가 `spec.allowIsolated`를 전혀
+보지 않고 "연결 요소 2개 이하, 한쪽이 단어 1개"를 항상 허용하고 있어서
+처음엔 구멍으로 의심했다. 직접 만든 시나리오로 확인해 보니 **실제로는
+도달 못 하는 코드**였다 — `SlotEnumerator`의 슬롯 조건("구간 안에 채워진
+칸이 1개 이상", 01-05)이 채움은 항상 기존 칸과 교차하도록 이미 강제하고,
+`allowIsolated=false`일 땐 `CorePlacer`도 연결 요소를 항상 1개로 유지하므로
+채움 단계가 격자에 없던 고립 단어를 새로 만들 방법이 없다. 그래도
+`CorePlacer._isolationOk`와 판정식을 맞추고 계약을 코드로 명시하려고
+`if (!spec.allowIsolated) return false;` 한 줄은 방어적으로 남겨 뒀다
+(`filler.dart` 주석에 도달 불가 이유를 적어 뒀다). `test/domain/filler_test.dart`의
+예산·캐시 테스트 3종은 일부러 코어 2개가 고립되는 픽스처(`coreSeed=7`)에
+기대고 있어서 — `allowIsolated: true`를 명시로 바꿔 그 의도(연결성 규칙과
+무관한 예산 소진·캐시 메커니즘 검증)를 유지했다.
+
+**재측정** (`dart run tool/measure_real.dart --runs 1000`, 같은
+`app/assets/words.sqlite` 26,000단어):
+
+| 레벨 | 실패율 (allowIsolated=true, 09-17) | 실패율 (allowIsolated=false, 09-18) |
+|---|---|---|
+| 1 첫걸음 | 0.00% | 0.00% |
+| 2 갈림길 | 0.00% | 0.00% |
+| 3 어스름 | 0.00% | 0.00% |
+| 4 들머리 | 0.00% | 0.10% |
+| 5 엇갈림 | 0.00% | 0.10% |
+| 6 깊은숲 | 0.00% | 0.40% |
+| 7 벼랑끝 | 0.00% | 0.40% |
+| 8 먼길 | 0.20% | 0.00% |
+| 9 외딴곳 | 0.40% | 0.10% |
+| 10 마루 | 0.20% | 0.00% |
+
+전 레벨 여전히 1% 미만, timeout 0건, p95 최대 6.9ms(레벨 9 — 데스크톱
+참고치 200ms의 1/29, 여유 그대로). **`TierQuota`/`backtrackBudget`/
+`coreCount` 조정 불필요** — 03-06이 이미 크로싱이 잘 되는 조합으로 튜닝해둔
+덕에, 고립 슬롯은 애초에 자주 쓰이던 안전판이 아니었다. `levels.dart` 자체는
+손대지 않았다(`LevelSpec.allowIsolated` 기본값 변경 + `Filler` 버그 수정만).
+`flutter analyze`(0 issues), `flutter test`(274개 전부 통과)도 재확인했다.
+
+실기기 확인이 아직 HUMAN 대기인 것은 위 03-05/03-06 원본 판정과 동일하다 —
+이 업데이트는 데스크톱 재측정만 반영한다.

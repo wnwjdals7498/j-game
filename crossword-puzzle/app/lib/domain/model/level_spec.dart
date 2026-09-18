@@ -25,7 +25,7 @@ class LevelSpec {
 
   final int maxAttempts; // seed를 바꿔 전체 재시작하는 최대 횟수
   final int backtrackBudget; // 한 시도 안에서 허용하는 되감기 총 횟수
-  final bool allowIsolated; // 고립 단어 1개 허용 여부 (규칙상 최대 1개)
+  final bool allowIsolated; // 고립 단어 1개까지 허용할지 (기본 false: 전면 금지, 01-03 규칙 5)
 
   /// 레벨 해제 점수 기준 (03-06, DESIGN.md 5절 8번).
   /// 이전 레벨의 `score`(`correct - wrong * 2`)가 이 값 이상이면 클리어로 치고
@@ -42,7 +42,7 @@ class LevelSpec {
     required this.fillQuotas,
     this.maxAttempts = 20,
     this.backtrackBudget = 200,
-    this.allowIsolated = true,
+    this.allowIsolated = false,
     this.clearScore = 0,
   });
 

@@ -94,15 +94,24 @@ class Filler {
     return r;
   }
 
-  /// 규칙 5(고립 단어 최대 1개): 연결 요소가 1개이거나, 2개이면서 한쪽이 단어 1개.
+  /// 규칙 5: [spec.allowIsolated]가 꺼져 있으면 연결 요소가 반드시 1개여야
+  /// 한다. 켜져 있으면(고립 단어 최대 1개) 연결 요소가 1개이거나, 2개이면서
+  /// 한쪽이 단어 1개까지 허용한다.
   ///
-  /// `canPlace` 가 검사하지 않는 유일한 격자 규칙이라 여기서 막는다. 코어 단계가
-  /// 고립 슬롯을 썼으면(01-04 `CorePlaceResult.isolatedUsed`) 그 단어에 채움이
-  /// 교차하는 순간 고립 요소가 2개짜리가 되어 `validate` 가 깨진다.
-  /// 판정식은 01-04 `CorePlacer._isolationOk` 와 같다.
+  /// `canPlace` 가 검사하지 않는 유일한 격자 규칙이라 여기서 막는다. 실제로
+  /// 걸리는 경로는: 코어 단계가 고립 슬롯을 썼을 때(01-04
+  /// `CorePlaceResult.isolatedUsed`, `allowIsolated: true`인 레벨에서만
+  /// 가능) 그 고립 단어에 채움이 교차해 크기가 2로 자라면 `validate`가
+  /// 깨지므로 여기서 막는다. `allowIsolated: false`면 코어 단계에서부터
+  /// 연결 요소가 항상 1개로 유지되고, `SlotEnumerator`의 슬롯 조건("구간
+  /// 안에 채워진 칸이 1개 이상")이 채움도 늘 기존 요소와 맞닿게 강제해서
+  /// 이 메서드의 `!spec.allowIsolated` 분기는 사실 도달하지 않는다 —
+  /// `CorePlacer._isolationOk`와 판정식을 맞추고 계약을 명시적으로 드러내기
+  /// 위한 이중 방어일 뿐이다.
   bool _isolationOk() {
     final comps = GridRules.components(g.placed);
     if (comps.length <= 1) return true;
+    if (!spec.allowIsolated) return false;
     if (comps.length > 2) return false;
     return comps.any((c) => c.length == 1);
   }
