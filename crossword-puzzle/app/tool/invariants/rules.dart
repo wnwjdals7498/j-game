@@ -92,4 +92,6 @@ const rules = <Rule>[
   Rule('INV-09', '사용자 문구 유지', Kind.mustContain, paths: ['lib/ui'], needles: protectedStrings),
   Rule('INV-10', '격자 상한 8', Kind.levelsMax, paths: ['lib/domain/levels.dart'], max: 8),
   Rule('INV-11', '새 의존성 금지', Kind.depsExact, paths: ['pubspec.yaml']),
+  Rule('INV-12', '모션 토큰 강제', Kind.mustNotContain,
+      paths: ['lib/ui'], exclude: ['lib/ui/theme/'], needles: ['Duration(milliseconds']),
 ];
