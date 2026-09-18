@@ -12,6 +12,11 @@ const _keyHintMode = 'hintMode';
 /// 직접 읽는다 — 부트스트랩 시점엔 아직 `SettingsModel`이 만들어지기 전이다.
 const wifiOnlySyncPrefsKey = 'wifiOnlySync';
 
+/// 첫 퍼즐 화면 진입 시 조작법 안내(칸 두 번 탭 → 방향 전환 등)를 봤는지.
+/// 설정 화면에 노출되는 값이 아니라 `puzzle_page.dart`만 보는 1회성 플래그라
+/// `SettingsModel` 필드로 두지 않고 이 키만 직접 읽고 쓴다.
+const tutorialSeenPrefsKey = 'tutorialSeen';
+
 /// 설정 상태: 힌트 모드, Wi-Fi 전용 갱신 등.
 ///
 /// 저장 항목은 `hintMode`, `wifiOnlySync` 둘뿐이다(04-06 "설정 저장").

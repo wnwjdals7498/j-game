@@ -8,6 +8,7 @@
 // 새로 만들어야 한다 — 그래서 라우트 인자가 아니라 생성자 파라미터로 받는다.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/levels.dart';
 import '../../domain/model/level_spec.dart';
@@ -43,8 +44,44 @@ class PuzzlePage extends StatelessWidget {
   }
 }
 
-class _PuzzleBody extends StatelessWidget {
+class _PuzzleBody extends StatefulWidget {
   const _PuzzleBody();
+
+  @override
+  State<_PuzzleBody> createState() => _PuzzleBodyState();
+}
+
+class _PuzzleBodyState extends State<_PuzzleBody> {
+  /// 퍼즐이 뜬 뒤 한 번만 확인하면 되므로, 이미 확인했으면(퍼즐 로딩 중
+  /// build가 여러 번 불려도) 다시 SharedPreferences를 안 친다.
+  bool _tutorialChecked = false;
+
+  /// 최초 진입 조작법 안내. 첫 퍼즐 화면에서 한 번만 보여준다 — 04-03의
+  /// "교차 셀을 다시 탭하면 세로로 토글" 같은, 화면만 봐서는 알기 어려운
+  /// 조작을 짚어 준다.
+  Future<void> _maybeShowTutorial() async {
+    if (_tutorialChecked) return;
+    _tutorialChecked = true;
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(tutorialSeenPrefsKey) ?? false) return;
+    await prefs.setBool(tutorialSeenPrefsKey, true);
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('이렇게 플레이해요'),
+        content: const Text(
+          '• 칸을 누르면 그 칸을 지나는 단어가 선택됩니다.\n'
+          '• 가로·세로 단어가 만나는 칸을 다시 누르면 방향이 바뀝니다.\n'
+          '• 아래 입력창에 단어를 입력하면 칸에 채워집니다.\n'
+          '• 다 채웠으면 "제출"을 눌러 채점합니다.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text('확인')),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +104,8 @@ class _PuzzleBody extends StatelessWidget {
     final hintMode = context.watch<SettingsModel>().hintMode;
     final numbers = numberCells(puzzle);
     final selected = model.selected;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTutorial());
 
     return Scaffold(
       appBar: AppBar(title: Text(model.spec.name)),
