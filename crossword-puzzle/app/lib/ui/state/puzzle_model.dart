@@ -166,14 +166,34 @@ class PuzzleModel extends ChangeNotifier {
     );
     if (ok != true) return;
 
-    final isFirst = await scope.stats.isFirstSubmit(puzzle!.levelId, puzzle!.seed);
-    final r = Scorer.score(puzzle!, answers, isFirstSubmit: isFirst);
-    await scope.stats.recordSubmit(
-        levelId: puzzle!.levelId, seed: puzzle!.seed, result: r);
+    try {
+      final isFirst =
+          await scope.stats.isFirstSubmit(puzzle!.levelId, puzzle!.seed);
+      final r = Scorer.score(puzzle!, answers, isFirstSubmit: isFirst);
+      await scope.stats.recordSubmit(
+          levelId: puzzle!.levelId, seed: puzzle!.seed, result: r);
 
-    submitted = true;
-    result = r;
-    notifyListeners();
+      submitted = true;
+      result = r;
+      notifyListeners();
+    } catch (e) {
+      // 갱신(05-04)으로 DB 연결이 닫힌 경우 등 — `submitted`/`result`를 세우지
+      // 않는다. `_handleSubmit`(puzzle_page.dart)이 `result == null`을 "계속
+      // 풀기"와 같은 경로로 처리해 결과 화면으로 넘어가지 않으므로, 통계를
+      // 반영 못 한 채로 반영된 것처럼 보이는 일은 없다 — 대신 원인을 알린다.
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('제출할 수 없습니다'),
+          content: const Text(
+              '단어 데이터에 문제가 생겼습니다. 앱을 다시 시작한 뒤 다시 시도해 주세요.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c), child: const Text('확인')),
+          ],
+        ),
+      );
+    }
   }
 
   /// "다시 풀기" (04-05 "버튼 동작"): 같은 seed로 같은 퍼즐 재도전.

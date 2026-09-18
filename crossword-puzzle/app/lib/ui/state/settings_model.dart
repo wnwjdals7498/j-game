@@ -7,13 +7,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum HintMode { definition, association }
 
 const _keyHintMode = 'hintMode';
-const _keyWifiOnlySync = 'wifiOnlySync';
+
+/// `main.dart`의 자동 갱신(05-04)도 `SettingsModel` 인스턴스 없이 이 키로
+/// 직접 읽는다 — 부트스트랩 시점엔 아직 `SettingsModel`이 만들어지기 전이다.
+const wifiOnlySyncPrefsKey = 'wifiOnlySync';
 
 /// 설정 상태: 힌트 모드, Wi-Fi 전용 갱신 등.
 ///
-/// 저장 항목은 `hintMode`, `wifiOnlySync` 둘뿐이다(04-06 "설정 저장"). Wi-Fi
-/// 전용 갱신은 5단계에서 실제로 연결되기 전까지 화면상 토글이 비활성 상태이지만
-/// (04-06 DoD), 값 자체는 여기서 미리 로드해 둔다.
+/// 저장 항목은 `hintMode`, `wifiOnlySync` 둘뿐이다(04-06 "설정 저장").
+/// `wifiOnlySync`는 05-04에서 설정 화면 토글과 `SyncService.sync(wifiOnly:)`
+/// 양쪽에 연결됐다.
 class SettingsModel extends ChangeNotifier {
   HintMode hintMode = HintMode.definition;
   bool wifiOnlySync = true;
@@ -25,7 +28,7 @@ class SettingsModel extends ChangeNotifier {
     final savedMode = prefs.getString(_keyHintMode);
     hintMode =
         savedMode == HintMode.association.name ? HintMode.association : HintMode.definition;
-    wifiOnlySync = prefs.getBool(_keyWifiOnlySync) ?? true;
+    wifiOnlySync = prefs.getBool(wifiOnlySyncPrefsKey) ?? true;
 
     loading = false;
     notifyListeners();
@@ -44,6 +47,6 @@ class SettingsModel extends ChangeNotifier {
     wifiOnlySync = value;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_keyWifiOnlySync, value);
+    await prefs.setBool(wifiOnlySyncPrefsKey, value);
   }
 }

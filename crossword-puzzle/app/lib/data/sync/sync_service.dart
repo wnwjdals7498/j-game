@@ -2,10 +2,12 @@
 // 단계든 **조용히 중단**하고 기존 DB를 그대로 쓴다 — 사용자 흐름을 막지 않는다.
 //
 // 네이티브 전용이다. 웹은 1차 범위 밖(REVIEW 4.2 (a)) — 이 파일은 dart:io를
-// 직접 써서 웹에서 컴파일되지 않는다. main.dart/설정 화면 연결은 05-04가
-// 하므로 이 파일을 실제로 호출하는 곳이 아직 없다 — 조건부 import로 감쌀
-// 대상(open_native.dart/open_web.dart 같은 분기점)은 05-04가 호출부를 만들
-// 때 그 자리에 둔다.
+// 직접 써서 웹에서 컴파일되지 않는다. 그래서 `SyncService`(추상 인터페이스,
+// sync_result.dart)와 이 파일의 `NativeSyncService`(구현)를 분리했다 —
+// `AppScope`(ui/state)는 `SyncService?` 타입만 알면 되고, 이 파일은 아무도
+// 웹 빌드에서 import하지 않는다. 실제로 만드는 곳은
+// `data/db/open_native.dart`의 `makeSyncService`(05-04) — 웹/스텁의 같은
+// 이름 함수는 `null`을 돌려준다.
 import 'dart:convert';
 import 'dart:io';
 
@@ -37,14 +39,8 @@ const defaultManifestUrl =
 /// 그대로 믿고 기기 저장공간을 무제한으로 쓰면 안 된다.
 const _maxSizeBytes = 50 * 1024 * 1024;
 
-/// `shared_preferences` 키. **`meta` 테이블에 넣지 않는다** — DB 교체(05-03)로
-/// `meta`가 새 DB 것으로 통째로 갈아엎이므로 갱신 시각이 사라진다(05-02
-/// "`last_sync_at` 저장 위치"). epoch milliseconds로 저장한다: `_isDue()`의
-/// 주기 계산과 05-04가 설정 화면에 표시할 값이 같은 키를 공유한다.
-const lastSyncAtPrefsKey = 'last_sync_at';
-
-class SyncService {
-  SyncService({
+class NativeSyncService implements SyncService {
+  NativeSyncService({
     required this.db,
     required this.prefs,
     required this.swapDb,
@@ -96,11 +92,30 @@ class SyncService {
   /// 있는 시스템 임시 폴더를 쓰면 05-03의 rename이 복사+삭제로 바뀐다).
   final Future<Directory> Function() _downloadDir;
 
+  /// 진행 중인 `sync()` 호출 (05-04 리뷰에서 발견: 재진입 방지가 없으면
+  /// 앱 시작 시 자동 갱신과 "지금 갱신" 버튼이 같은 임시 파일
+  /// (`words.sqlite.download`)·같은 `words.sqlite`/`.bak`을 동시에 건드릴 수
+  /// 있다). 진행 중에 또 불리면 새로 시작하지 않고 **같은 결과에 합류**한다
+  /// — 두 번째 호출자가 `force`/`wifiOnly`를 다르게 줬어도 첫 호출이 이미
+  /// 정한 조건으로 끝난 결과를 같이 받는다(둘 다 새로 던지는 것보다 안전한
+  /// 절충).
+  Future<SyncResult>? _inFlight;
+
   /// [force]는 설정의 "지금 갱신" 버튼용 — 주기·네트워크 조건을 건너뛴다.
   /// [wifiOnly]는 호출 시점의 `SettingsModel.wifiOnlySync` 값을 그대로
   /// 넘겨받는다 — data 계층이 ui/state를 몰라도 되게 하려고 bool 하나로
   /// 전달받는다(이 서비스가 SettingsModel을 직접 참조하지 않는 이유).
-  Future<SyncResult> sync({bool force = false, bool wifiOnly = true}) async {
+  @override
+  Future<SyncResult> sync({bool force = false, bool wifiOnly = true}) {
+    final existing = _inFlight;
+    if (existing != null) return existing;
+    final future = _syncOnce(force: force, wifiOnly: wifiOnly);
+    _inFlight = future;
+    future.whenComplete(() => _inFlight = null);
+    return future;
+  }
+
+  Future<SyncResult> _syncOnce({required bool force, required bool wifiOnly}) async {
     File? tmp;
     try {
       if (!force && !_isDue()) {
@@ -327,5 +342,6 @@ class SyncService {
   /// 직접 주입했다면(테스트의 `MockClient` 등) 그 클라이언트의 수명은
   /// 호출자 책임이므로 이 메서드가 그것까지 닫는다는 점에 유의한다 — 이
   /// 서비스를 재사용할 계획이면 `dispose()`를 부르지 않는다.
+  @override
   void dispose() => _httpClient.close();
 }

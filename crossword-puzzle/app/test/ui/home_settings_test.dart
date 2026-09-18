@@ -24,6 +24,7 @@ import 'package:sqlite3/sqlite3.dart';
 import 'package:jgame/data/db/app_database.dart';
 import 'package:jgame/data/hint_repository.dart';
 import 'package:jgame/data/stat_repository.dart';
+import 'package:jgame/data/sync/sync_result.dart';
 import 'package:jgame/domain/fixtures/dummy_dictionary.dart';
 import 'package:jgame/domain/generator/grid_generator.dart';
 import 'package:jgame/domain/levels.dart';
@@ -33,6 +34,23 @@ import 'package:jgame/ui/settings/license_page.dart';
 import 'package:jgame/ui/settings/settings_page.dart';
 import 'package:jgame/ui/state/app_scope.dart';
 import 'package:jgame/ui/state/settings_model.dart';
+
+/// "지금 갱신" 버튼(05-04) 테스트용 가짜. 항상 같은 [SyncResult]를 돌려준다.
+class _FakeSyncService implements SyncService {
+  _FakeSyncService(this.result);
+
+  final SyncResult result;
+  int callCount = 0;
+
+  @override
+  Future<SyncResult> sync({bool force = false, bool wifiOnly = true}) async {
+    callCount++;
+    return result;
+  }
+
+  @override
+  void dispose() {}
+}
 
 void main() {
   late Directory tmp;
@@ -61,8 +79,9 @@ void main() {
   }
 
   /// shell_test.dart(04-01)·submit_test.dart(04-05)와 같은 패턴: 더미 사전으로
-  /// 성공하는 [AppScope]를 만든다.
-  AppScope buildScope(AppDatabase db) {
+  /// 성공하는 [AppScope]를 만든다. [syncService]를 생략하면(대부분의 기존
+  /// 테스트) `null`이다 — 05-04의 "지금 갱신" 버튼이 안 그려지는 그 경로다.
+  AppScope buildScope(AppDatabase db, {SyncService? syncService}) {
     final words = InMemoryWordRepository(buildDummyDictionary(seed: 1));
     return AppScope(
       db: db,
@@ -70,6 +89,7 @@ void main() {
       stats: StatRepository(db),
       generator: GridGenerator(words),
       hints: HintRepository(db),
+      syncService: syncService,
     );
   }
 
@@ -270,6 +290,86 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(LicensePage), findsOneWidget);
+    });
+
+    group('지금 갱신 버튼 (05-04)', () {
+      testWidgets('AppScope.syncService가 null이면(웹) 버튼이 안 보임',
+          (tester) async {
+        await useTallViewport(tester);
+        final db = openEmptyDb();
+        addTearDown(db.close);
+
+        await tester.pumpWidget(wrapSettings(buildScope(db), SettingsModel()));
+        await tester.pumpAndSettle();
+
+        expect(find.text('지금 갱신'), findsNothing);
+      });
+
+      testWidgets('성공: 단어 수 표시 + 재시작 안내 스낵바', (tester) async {
+        await useTallViewport(tester);
+        final db = openEmptyDb();
+        addTearDown(db.close);
+        final sync = _FakeSyncService(
+            const SyncResult(SyncOutcome.success, wordCount: 45678));
+
+        await tester.pumpWidget(
+            wrapSettings(buildScope(db, syncService: sync), SettingsModel()));
+        await tester.pumpAndSettle();
+
+        expect(find.text('지금 갱신'), findsOneWidget);
+        await tester.tap(find.text('지금 갱신'));
+        await tester.pump(); // 스낵바 등장 프레임만 먼저 확인
+
+        expect(sync.callCount, 1);
+        expect(find.textContaining('45,678개로'), findsOneWidget);
+        expect(find.textContaining('다시 시작'), findsOneWidget);
+
+        await tester.pumpAndSettle(); // 스낵바 타이머 정리
+      });
+
+      testWidgets('스키마 불일치: "재시도"가 아니라 "업데이트" 안내',
+          (tester) async {
+        // 재시도로는 안 풀리는 상태를 재시도하라고 안내하면 사용자가 영원히
+        // 헛수고한다 — 05-04 리뷰에서 지적된 메시지 버킷 오류의 회귀 테스트.
+        await useTallViewport(tester);
+        final db = openEmptyDb();
+        addTearDown(db.close);
+        final sync =
+            _FakeSyncService(const SyncResult(SyncOutcome.skippedSchemaIncompatible));
+
+        await tester.pumpWidget(
+            wrapSettings(buildScope(db, syncService: sync), SettingsModel()));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('지금 갱신'));
+        await tester.pump();
+
+        expect(find.textContaining('업데이트'), findsOneWidget);
+        expect(find.textContaining('다시 시도'), findsNothing);
+
+        await tester.pumpAndSettle();
+      });
+
+      testWidgets('Wi-Fi에서만 갱신 토글: SettingsModel 저장, 재시작 후 유지',
+          (tester) async {
+        await useTallViewport(tester);
+        final db = openEmptyDb();
+        addTearDown(db.close);
+        final settings = SettingsModel();
+        await settings.load();
+
+        await tester.pumpWidget(wrapSettings(buildScope(db), settings));
+        await tester.pumpAndSettle();
+        expect(settings.wifiOnlySync, isTrue);
+
+        await tester.tap(find.text('Wi-Fi에서만 갱신'));
+        await tester.pumpAndSettle();
+        expect(settings.wifiOnlySync, isFalse);
+
+        final restarted = SettingsModel();
+        await restarted.load();
+        expect(restarted.wifiOnlySync, isFalse);
+      });
     });
   });
 

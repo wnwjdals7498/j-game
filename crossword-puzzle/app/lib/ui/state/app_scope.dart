@@ -6,6 +6,7 @@
 import '../../data/db/app_database.dart';
 import '../../data/hint_repository.dart';
 import '../../data/stat_repository.dart';
+import '../../data/sync/sync_result.dart' show SyncService;
 import '../../domain/generator/grid_generator.dart';
 import '../../domain/repository/word_repository.dart';
 
@@ -20,11 +21,21 @@ class AppScope {
   /// 한 번에 읽어 캐시한다.
   final HintRepository hints;
 
+  /// 갱신(05-02~05-04). 웹에서는 `null`(1차 범위 밖) — 설정 화면이 이 값의
+  /// null 여부로 "지금 갱신" UI를 보일지 정한다. 갱신 성공 후 `db`는 갱신되지
+  /// 않는다 — `SyncService`가 내부적으로 새 `AppDatabase`를 들고 있게 되지만
+  /// (교체 후 기존 연결은 닫힌다), 이 `AppScope.db`는 그 시점의 연결을 그대로
+  /// 가리킨다. 그래서 갱신 성공 시 "앱을 다시 시작해 주세요"로 안내한다
+  /// (05-04 "막히면" — `AppScope`를 재구독 가능하게 바꾸는 대신 고른 1차
+  /// 범위 결정).
+  final SyncService? syncService;
+
   const AppScope({
     required this.db,
     required this.words,
     required this.stats,
     required this.generator,
     required this.hints,
+    this.syncService,
   });
 }

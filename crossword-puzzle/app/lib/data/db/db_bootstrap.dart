@@ -3,10 +3,13 @@
 // `assets/words.sqlite` 를 쓰기 가능한 DB로 만드는 절차는 플랫폼마다 완전히
 // 다르다 — 네이티브는 앱 문서 디렉터리로 파일 복사, 웹은 OPFS/IndexedDB 적재.
 // 그 차이를 이 파일 뒤로 숨기고, 호출자는 `DbBootstrap.open()` 하나만 안다.
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'app_database.dart';
 import 'open_stub.dart'
     if (dart.library.io) 'open_native.dart'
     if (dart.library.js_interop) 'open_web.dart';
+import '../sync/sync_result.dart' show SyncService;
 
 class DbBootstrap {
   DbBootstrap._();
@@ -34,6 +37,14 @@ class DbBootstrap {
       return next;
     }
   }
+
+  /// 05-04: `main.dart`가 `AppScope.syncService`를 만들 때 이 메서드를 통해
+  /// 호출한다 — `main.dart`는 조건부 import 파일(`open_native.dart` 등)을
+  /// 직접 알 필요가 없다(그 파일들을 직접 import하면 웹 빌드가 깨진다).
+  /// 웹/스텁에서는 `null`.
+  static Future<SyncService?> createSyncService(
+          AppDatabase db, SharedPreferences prefs) =>
+      makeSyncService(db, prefs);
 
   /// `meta.schema_version` 과 단어 수를 검증한다.
   ///

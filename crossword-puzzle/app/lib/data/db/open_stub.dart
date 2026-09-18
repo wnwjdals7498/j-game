@@ -7,8 +7,10 @@
 // "if (dart.library.io) ... if (dart.library.js_interop) ..." 뒤에 매칭되는
 // 라이브러리가 하나도 없을 때 참조할 기본 라이브러리가 없어 빌드가 실패한다.
 import 'package:drift/drift.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_database.dart';
+import '../sync/sync_result.dart' show SyncService;
 
 Future<QueryExecutor> openConnection() {
   throw UnsupportedError(
@@ -18,4 +20,8 @@ Future<QueryExecutor> openConnection() {
 }
 
 Future<Future<AppDatabase> Function(AppDatabase)?> makeReseeder() async =>
+    null;
+
+Future<SyncService?> makeSyncService(
+        AppDatabase db, SharedPreferences prefs) async =>
     null;

@@ -37,35 +37,45 @@ class HomeModel extends ChangeNotifier {
 
   bool loading = true;
 
+  /// 갱신(05-04)으로 `AppScope.db`가 닫힌 뒤 조회하면 여기 담긴다 — 재시작
+  /// 전까지 DB 전체가 못 쓰게 되므로(05-03 `swap()`이 기존 연결을 닫는다),
+  /// 무한 로딩 스피너 대신 안내 문구를 보여준다(`home_page.dart`).
+  Object? error;
+
   HomeModel(this.scope);
 
   Future<void> load() async {
     loading = true;
+    error = null;
     notifyListeners();
 
-    summary = await scope.stats.summary();
+    try {
+      summary = await scope.stats.summary();
 
-    // `bestScores()`로 전체 레벨을 한 번에 가져온다 — 레벨마다 `bestScore`를
-    // 따로 부르면 N+1(레벨 수만큼 DB 조회)이 된다 (04-06 "레벨마다 DB 조회
-    // 1회 → 12회. 홈 진입마다 도는 건 낭비다").
-    final best = await scope.stats.bestScores();
+      // `bestScores()`로 전체 레벨을 한 번에 가져온다 — 레벨마다 `bestScore`를
+      // 따로 부르면 N+1(레벨 수만큼 DB 조회)이 된다 (04-06 "레벨마다 DB 조회
+      // 1회 → 12회. 홈 진입마다 도는 건 낭비다").
+      final best = await scope.stats.bestScores();
 
-    final out = <LevelStatus>[];
-    var prevCleared = true; // 레벨 1은 항상 해제
-    for (final spec in levels) {
-      final bestScore = best[spec.id];
-      final cleared = bestScore != null && bestScore >= spec.clearScore;
-      out.add(LevelStatus(
-        spec,
-        unlocked: prevCleared,
-        cleared: cleared,
-        bestScore: bestScore,
-      ));
-      prevCleared = cleared;
+      final out = <LevelStatus>[];
+      var prevCleared = true; // 레벨 1은 항상 해제
+      for (final spec in levels) {
+        final bestScore = best[spec.id];
+        final cleared = bestScore != null && bestScore >= spec.clearScore;
+        out.add(LevelStatus(
+          spec,
+          unlocked: prevCleared,
+          cleared: cleared,
+          bestScore: bestScore,
+        ));
+        prevCleared = cleared;
+      }
+      statuses = out;
+    } catch (e) {
+      error = e;
+    } finally {
+      loading = false;
+      notifyListeners();
     }
-    statuses = out;
-
-    loading = false;
-    notifyListeners();
   }
 }

@@ -4,14 +4,44 @@
 // 전체 레벨의 최고 점수를 한 번에 가져와 만든다 — N+1 없음 (04-06 DoD).
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../data/sync/sync_result.dart' show pendingSyncNoticePrefsKey;
 import '../puzzle/puzzle_page.dart';
 import '../state/app_scope.dart';
 import '../state/home_model.dart';
 import '../state/puzzle_model.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // 앱 시작 시 자동 갱신(main.dart)이 성공했으면 여기서 한 번 안내한다 —
+    // 그 시점엔 위젯 트리가 없어 스낵바를 못 띄웠다(05-04 리뷰 CRITICAL:
+    // `AppScope.db`가 이미 닫혔는데 아무 설명이 없던 문제). 프레임이 그려진
+    // 뒤로 미룬다 — `ScaffoldMessenger`는 build 도중엔 못 쓴다.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowSyncNotice());
+  }
+
+  Future<void> _maybeShowSyncNotice() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(pendingSyncNoticePrefsKey) != true) return;
+    await prefs.setBool(pendingSyncNoticePrefsKey, false); // 한 번만 보여준다
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('단어 사전이 갱신되었습니다. 반영하려면 앱을 다시 시작해 주세요.'),
+        duration: Duration(seconds: 6),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,19 +72,30 @@ class _HomeBody extends StatelessWidget {
       ),
       body: model.loading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                _SummaryHeader(summary: model.summary),
-                const Divider(height: 1),
-                Expanded(
-                  child: ListView.separated(
-                    itemCount: model.statuses.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, i) => _LevelRow(status: model.statuses[i]),
+          : model.error != null
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      '단어 데이터를 불러오지 못했습니다.\n앱을 다시 시작해 주세요.',
+                      textAlign: TextAlign.center,
+                    ),
                   ),
+                )
+              : Column(
+                  children: [
+                    _SummaryHeader(summary: model.summary),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: model.statuses.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, i) =>
+                            _LevelRow(status: model.statuses[i]),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
     );
   }
 }

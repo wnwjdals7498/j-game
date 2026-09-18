@@ -117,7 +117,7 @@ void main() {
     // 바이트가 달라질 수 있다(결정론에 기대는 대신 값 자체를 고정한다).
     final resolvedBytes = dbBytes?.call() ?? _validDbBytes(tmp);
     List<int> bytes() => resolvedBytes;
-    return SyncService(
+    return NativeSyncService(
       db: currentDb,
       prefs: prefs,
       swapDb: swapDb ?? (current, newDb) async => current,
@@ -248,7 +248,7 @@ void main() {
 
   test('어떤 실패도 예외를 던지지 않는다 (manifest 호출 자체가 실패)', () async {
     final prefs = await SharedPreferences.getInstance();
-    final svc = SyncService(
+    final svc = NativeSyncService(
       db: currentDb,
       prefs: prefs,
       swapDb: (current, newDb) async => current,

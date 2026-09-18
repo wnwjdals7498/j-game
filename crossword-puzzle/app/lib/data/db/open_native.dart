@@ -8,10 +8,13 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
 
 import 'app_database.dart';
 import '../sync/db_swapper.dart';
+import '../sync/sync_result.dart' show SyncService;
+import '../sync/sync_service.dart';
 
 const _dbFileName = 'words.sqlite';
 const _asset = 'assets/words.sqlite';
@@ -37,6 +40,18 @@ Future<Future<AppDatabase> Function(AppDatabase)?> makeReseeder() async {
     currentFile: file,
   );
   return swapper.reseedFromAsset;
+}
+
+/// 05-04: `main.dart`가 `AppScope.syncService`를 만들 때 쓴다. 웹/스텁의
+/// 같은 이름 함수는 `null`을 반환한다(갱신은 1차 범위에서 웹 제외).
+Future<SyncService?> makeSyncService(
+    AppDatabase db, SharedPreferences prefs) async {
+  final file = await _dbFile();
+  final swapper = DbSwapper(
+    open: (f) => AppDatabase(NativeDatabase(f)),
+    currentFile: file,
+  );
+  return NativeSyncService(db: db, prefs: prefs, swapDb: swapper.swap);
 }
 
 Future<File> _dbFile() async {

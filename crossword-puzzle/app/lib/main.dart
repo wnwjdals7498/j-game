@@ -16,14 +16,19 @@
 // `MultiProvider`로 감싼 뒤 `runApp`)과 이어지는 "시작 화면" 절(2번: `runApp` 먼저
 // + `FutureBuilder`)은 그대로 이어붙이면 서로 모순되므로, 문서가 명시적으로
 // 선택한 2번을 기준으로 두 스니펫을 이 형태로 합쳤다.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'data/db/db_bootstrap.dart';
 import 'data/drift_word_repository.dart';
 import 'data/hint_repository.dart';
 import 'data/stat_repository.dart';
+import 'data/sync/sync_result.dart'
+    show SyncOutcome, pendingSyncNoticePrefsKey;
 import 'domain/generator/grid_generator.dart';
 import 'ui/bootstrap/bootstrap_pages.dart';
 import 'ui/home/home_page.dart';
@@ -42,15 +47,40 @@ Future<void> main() async {
   runApp(JGameApp(bootstrap: _bootstrap()));
 }
 
-/// DB 부트스트랩(03-02) → 리포지토리 조립. [JGameApp]의 `FutureBuilder`가 기다린다.
+/// DB 부트스트랩(03-02) → 리포지토리 조립 → 갱신(05-04) 확인. [JGameApp]의
+/// `FutureBuilder`가 기다린다.
 Future<AppScope> _bootstrap() async {
   final db = await DbBootstrap.open();
+  final prefs = await SharedPreferences.getInstance();
+  final syncService = await DbBootstrap.createSyncService(db, prefs);
+
+  // 앱 시작을 막지 않는다(05-02 "앱 시작 시 호출") — await하지 않고 던진다.
+  // 이 시점엔 아직 위젯 트리가 없어 그 자리에서 스낵바를 못 띄운다.
+  // `wifiOnlySync`는 `SettingsModel`이 아직 안 만들어진 시점이라 `prefs`에서
+  // 같은 키로 직접 읽는다.
+  //
+  // **성공하면 갱신 도중 `DbSwapper.swap`이 이 `db` 연결을 닫는다**(05-03) —
+  // "옛 값이 조용히 남는" 게 아니라 이후 모든 쿼리가 예외를 던진다. 그래서
+  // 성공 시 `pendingSyncNoticePrefsKey`를 세워 둔다 — `HomePage`가 다음 진입
+  // 때 "다시 시작해 주세요"를 안내한다(05-04 리뷰 CRITICAL: 자동 갱신이
+  // 아무 설명 없이 데이터 계층을 멈춰 세우던 문제).
+  if (syncService != null) {
+    unawaited(syncService
+        .sync(wifiOnly: prefs.getBool(wifiOnlySyncPrefsKey) ?? true)
+        .then((result) {
+      if (result.outcome == SyncOutcome.success) {
+        prefs.setBool(pendingSyncNoticePrefsKey, true);
+      }
+    }));
+  }
+
   return AppScope(
     db: db,
     words: DriftWordRepository(db),
     stats: StatRepository(db),
     generator: GridGenerator(DriftWordRepository(db)),
     hints: HintRepository(db),
+    syncService: syncService,
   );
 }
 
