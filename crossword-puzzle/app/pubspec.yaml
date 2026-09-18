@@ -147,11 +147,11 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
 
 # 06-01 "스플래시" — `dart run flutter_native_splash:create`로 생성.
-# `color`는 `main.dart`의 `colorSchemeSeed: Colors.indigo`(Material 3 라이트
-# 서피스)와 가장 가깝게 흰색으로 맞춰 `BootstrapLoadingPage` 전환 시 깜빡임을
-# 줄인다. 이미지는 아이콘 원본이 아니라 투명 배경의 foreground를 쓴다 —
-# icon.png를 그대로 쓰면 자체 모서리(검은 사각 모서리)가 스플래시 배경 위에
-# 그대로 보인다.
+# `color`/`color_dark`는 `GameColors.light.surface`(`#FFFFFF`)·
+# `GameColors.dark.surface`(`#121212`, 07-02-03 `app_theme.dart`)와 맞춰
+# `BootstrapLoadingPage` 전환 시 깜빡임을 줄인다. 이미지는 아이콘 원본이 아니라
+# 투명 배경의 foreground를 쓴다 — icon.png를 그대로 쓰면 자체 모서리(검은 사각
+# 모서리)가 스플래시 배경 위에 그대로 보인다.
 flutter_native_splash:
   color: "#FFFFFF"
   color_dark: "#121212"

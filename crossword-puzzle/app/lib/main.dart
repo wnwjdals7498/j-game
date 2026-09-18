@@ -37,6 +37,7 @@ import 'ui/result/result_page.dart';
 import 'ui/settings/settings_page.dart';
 import 'ui/state/app_scope.dart';
 import 'ui/state/settings_model.dart';
+import 'ui/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -111,13 +112,17 @@ class JGameApp extends StatelessWidget {
         if (snapshot.hasError) {
           return MaterialApp(
             title: _title,
+            theme: buildLightTheme(),
+            darkTheme: buildDarkTheme(),
             home: BootstrapErrorPage(error: snapshot.error!),
           );
         }
         if (!snapshot.hasData) {
-          return const MaterialApp(
+          return MaterialApp(
             title: _title,
-            home: BootstrapLoadingPage(),
+            theme: buildLightTheme(),
+            darkTheme: buildDarkTheme(),
+            home: const BootstrapLoadingPage(),
           );
         }
         return MultiProvider(
@@ -125,11 +130,15 @@ class JGameApp extends StatelessWidget {
             Provider<AppScope>.value(value: snapshot.data!),
             ChangeNotifierProvider(create: (_) => SettingsModel()..load()),
           ],
-          child: MaterialApp(
-            title: _title,
-            theme: ThemeData(useMaterial3: true),
-            initialRoute: '/',
-            routes: buildRoutes(),
+          child: Consumer<SettingsModel>(
+            builder: (_, settings, _) => MaterialApp(
+              title: _title,
+              theme: buildLightTheme(),
+              darkTheme: buildDarkTheme(),
+              themeMode: settings.themeMode,
+              initialRoute: '/',
+              routes: buildRoutes(),
+            ),
           ),
         );
       },
