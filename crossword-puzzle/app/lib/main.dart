@@ -101,7 +101,7 @@ class JGameApp extends StatelessWidget {
 
   const JGameApp({super.key, required this.bootstrap});
 
-  static const _title = '단어 연상 퀴즈';
+  static const _title = 'J Crossword Puzzle';
 
   @override
   Widget build(BuildContext context) {

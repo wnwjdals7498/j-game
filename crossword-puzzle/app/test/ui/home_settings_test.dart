@@ -17,6 +17,7 @@ import 'dart:io';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqlite3/sqlite3.dart';
@@ -59,6 +60,16 @@ void main() {
 
   setUpAll(() {
     schemaSql = File('../tools/schema.sql').readAsStringSync();
+    // `_AppVersionSection`(06-01)이 쓰는 `PackageInfo.fromPlatform()`은
+    // 테스트 환경엔 플랫폼 채널 구현이 없어 그대로 두면 MissingPluginException으로
+    // 끝난다 — "오픈소스 라이선스" 탭 테스트가 그 값을 기다리므로 목값을 심는다.
+    PackageInfo.setMockInitialValues(
+      appName: 'jgame',
+      packageName: 'io.github.wnwjdals7498.jgame',
+      version: '1.0.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
   });
 
   setUp(() {

@@ -61,7 +61,7 @@ class _HomeBody extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('단어 연상 퀴즈'),
+        title: const Text('J Crossword Puzzle'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),

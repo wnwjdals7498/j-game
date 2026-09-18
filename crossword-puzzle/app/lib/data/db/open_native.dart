@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
@@ -44,6 +45,10 @@ Future<Future<AppDatabase> Function(AppDatabase)?> makeReseeder() async {
 
 /// 05-04: `main.dart`가 `AppScope.syncService`를 만들 때 쓴다. 웹/스텁의
 /// 같은 이름 함수는 `null`을 반환한다(갱신은 1차 범위에서 웹 제외).
+///
+/// `appVersion`은 06-01부터 `PackageInfo`(실제 빌드 버전)에서 읽는다 —
+/// pubspec.yaml `version`을 올릴 때 `NativeSyncService.appVersion` 기본값을
+/// 손으로 맞출 필요가 없다(05-02 min_app_version 비교가 이 값을 쓴다).
 Future<SyncService?> makeSyncService(
     AppDatabase db, SharedPreferences prefs) async {
   final file = await _dbFile();
@@ -51,7 +56,13 @@ Future<SyncService?> makeSyncService(
     open: (f) => AppDatabase(NativeDatabase(f)),
     currentFile: file,
   );
-  return NativeSyncService(db: db, prefs: prefs, swapDb: swapper.swap);
+  final info = await PackageInfo.fromPlatform();
+  return NativeSyncService(
+    db: db,
+    prefs: prefs,
+    swapDb: swapper.swap,
+    appVersion: info.version,
+  );
 }
 
 Future<File> _dbFile() async {

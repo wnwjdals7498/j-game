@@ -1,6 +1,7 @@
 // 설정·정보 화면 (04-06 "설정·정보 화면"). 힌트 모드, 단어 데이터(DB) 정보,
 // 출처·라이선스 표기로 구성된다.
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,11 +11,9 @@ import '../state/app_scope.dart';
 import '../state/settings_model.dart';
 import 'license_page.dart';
 
-/// pubspec.yaml `version: 1.0.0+1`과 맞춘 상수 (04-06 "앱 버전 1.0.0 (1)").
-/// `package_info_plus` 같은 의존성을 새로 넣지 않는 1차 범위라, pubspec.yaml의
-/// version을 바꾸면 이 값도 같이 바꿔야 한다.
-const _appVersionName = '1.0.0';
-const _appVersionBuildNumber = '1';
+/// 06-01 "앱 이름 확정" — `AndroidManifest.xml`의 `android:label`,
+/// `main.dart`의 `MaterialApp.title`과 같은 이름을 쓴다.
+const _appName = 'J Crossword Puzzle';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -65,19 +64,7 @@ class SettingsPage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const LicenseNoticePage()),
             ),
           ),
-          ListTile(
-            title: const Text('오픈소스 라이선스'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => showLicensePage(
-              context: context,
-              applicationName: '단어 연상 퀴즈',
-              applicationVersion: _appVersionName,
-            ),
-          ),
-          const ListTile(
-            title: Text('앱 버전'),
-            trailing: Text('$_appVersionName ($_appVersionBuildNumber)'),
-          ),
+          const _AppVersionSection(),
         ],
       ),
     );
@@ -222,6 +209,51 @@ class _DbInfoSectionState extends State<_DbInfoSection> {
               trailing: Text(_formatDate(info?.builtAt)),
             ),
             lastSyncTile,
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// "오픈소스 라이선스" 탭 + "앱 버전" 표시 (06-01). 둘 다 `PackageInfo`가
+/// 있어야 하므로 하나의 `FutureBuilder`로 묶는다 — `_DbInfoSection`과 같은
+/// "한 번만 연다" 패턴(`late final`)이다.
+class _AppVersionSection extends StatefulWidget {
+  const _AppVersionSection();
+
+  @override
+  State<_AppVersionSection> createState() => _AppVersionSectionState();
+}
+
+class _AppVersionSectionState extends State<_AppVersionSection> {
+  late final Future<PackageInfo> _infoFuture = PackageInfo.fromPlatform();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      future: _infoFuture,
+      builder: (context, snapshot) {
+        final info = snapshot.data;
+        return Column(
+          children: [
+            ListTile(
+              title: const Text('오픈소스 라이선스'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: info == null
+                  ? null
+                  : () => showLicensePage(
+                        context: context,
+                        applicationName: _appName,
+                        applicationVersion: info.version,
+                      ),
+            ),
+            ListTile(
+              title: const Text('앱 버전'),
+              trailing: Text(
+                info == null ? '-' : '${info.version} (${info.buildNumber})',
+              ),
+            ),
           ],
         );
       },

@@ -54,6 +54,10 @@ dependencies:
   crypto: ^3.0.0
   connectivity_plus: ^6.0.0
 
+  # 6단계(06-01): 설정 화면의 앱 버전 표시와 05-02 min_app_version 비교를
+  # pubspec.yaml version과 수동으로 맞추던 상수 대신 실제 빌드 정보로 읽는다.
+  package_info_plus: ^8.0.0
+
   # 원래 dev_dependencies였다(테스트에서 fixture DB를 직접 열 때만 썼다).
   # 05-02의 sanity check(SyncService._sanityCheck)이 다운로드한 DB를 drift가
   # 아니라 이 패키지로 직접 열어(같은 파일을 가리키는 두 번째 AppDatabase를
@@ -75,6 +79,13 @@ dev_dependencies:
   drift_dev: ^2.35.0
   build_runner: ^2.16.1
 
+  # 6단계(06-01): 런처 아이콘·스플래시 생성기. `assets/icon/`의 원본에서
+  # 안드로이드 mipmap/스플래시 네이티브 리소스를 만든다 — 생성 시점에만 쓰여
+  # 앱 번들에는 들어가지 않는다(아래 `flutter: assets:`에 `assets/icon/`을
+  # 넣지 않은 이유).
+  flutter_launcher_icons: ^0.14.0
+  flutter_native_splash: ^2.4.0
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -86,8 +97,11 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # `assets/icon/`은 여기 넣지 않는다 — flutter_launcher_icons/flutter_native_splash가
+  # 생성 시점에만 읽고 네이티브 리소스로 복사한다(06-01 "아이콘" 절).
   assets:
-    - assets/
+    - assets/LICENSES.md
+    - assets/words.sqlite
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -119,3 +133,30 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# 06-01 "아이콘" — `dart run flutter_launcher_icons`로 생성. 원본은
+# asset/icon/의 Codex 생성 이미지(2026-09-18)를 1024x1024로 리사이즈한 것.
+# `adaptive_icon_background`는 원본 배경에서 뽑은 파란색, foreground는
+# 안전 영역(중앙 66%) 안에 들어가도록 64% 축소해 투명 캔버스에 얹은 버전이다.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#08A2FB"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+
+# 06-01 "스플래시" — `dart run flutter_native_splash:create`로 생성.
+# `color`는 `main.dart`의 `colorSchemeSeed: Colors.indigo`(Material 3 라이트
+# 서피스)와 가장 가깝게 흰색으로 맞춰 `BootstrapLoadingPage` 전환 시 깜빡임을
+# 줄인다. 이미지는 아이콘 원본이 아니라 투명 배경의 foreground를 쓴다 —
+# icon.png를 그대로 쓰면 자체 모서리(검은 사각 모서리)가 스플래시 배경 위에
+# 그대로 보인다.
+flutter_native_splash:
+  color: "#FFFFFF"
+  color_dark: "#121212"
+  image: "assets/icon/icon_foreground.png"
+  android_12:
+    image: "assets/icon/icon_foreground.png"
+    color: "#FFFFFF"
+    color_dark: "#121212"

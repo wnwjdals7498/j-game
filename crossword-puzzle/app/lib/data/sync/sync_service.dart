@@ -70,11 +70,10 @@ class NativeSyncService implements SyncService {
 
   final String manifestUrl;
 
-  /// 현재 앱 버전. `settings_page.dart`의 `_appVersionName`처럼
-  /// pubspec.yaml `version`과 수동으로 맞춰야 하는 상수다 — `package_info_plus`
-  /// 를 새로 넣지 않는 1차 범위 결정(04-06과 같은 이유)을 그대로 따른다.
-  /// **이 값이 실제 버전보다 낮아지면 모든 갱신이 `skippedAppTooOld`로
-  /// 막힌다** — pubspec.yaml을 올릴 때 반드시 같이 맞춘다.
+  /// 현재 앱 버전. 기본값 `'1.0.0'`은 이 클래스를 직접 생성하는 테스트용
+  /// 안전값일 뿐이다 — 실제 앱은 `open_native.dart`의 `makeSyncService`가
+  /// `PackageInfo.fromPlatform()`으로 읽은 값을 넘긴다(06-01). **이 값이
+  /// 실제 버전보다 낮아지면 모든 갱신이 `skippedAppTooOld`로 막힌다.**
   final String appVersion;
 
   final int intervalDays;
