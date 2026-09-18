@@ -11,6 +11,8 @@ import 'package:drift/drift.dart';
 import 'package:drift/wasm.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import 'app_database.dart';
+
 /// `initializeDatabase` 는 이 이름의 DB가 브라우저 저장소(OPFS/IndexedDB)에
 /// 아직 없을 때만 호출된다. 재실행 시에는 저장된 것을 그대로 쓴다.
 Future<QueryExecutor> openConnection() async {
@@ -33,3 +35,8 @@ Future<QueryExecutor> openConnection() async {
   }
   return result.resolvedExecutor;
 }
+
+/// 웹은 갱신(5단계)이 1차 범위 밖이라 재적재를 지원하지 않는다 —
+/// `open_native.dart`의 같은 이름 함수 참고.
+Future<Future<AppDatabase> Function(AppDatabase)?> makeReseeder() async =>
+    null;

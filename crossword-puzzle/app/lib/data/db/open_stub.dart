@@ -8,9 +8,14 @@
 // 라이브러리가 하나도 없을 때 참조할 기본 라이브러리가 없어 빌드가 실패한다.
 import 'package:drift/drift.dart';
 
+import 'app_database.dart';
+
 Future<QueryExecutor> openConnection() {
   throw UnsupportedError(
     'DbBootstrap.open()이 지원하지 않는 플랫폼에서 호출되었다 '
     '(dart:io도 dart:js_interop도 없음).',
   );
 }
+
+Future<Future<AppDatabase> Function(AppDatabase)?> makeReseeder() async =>
+    null;

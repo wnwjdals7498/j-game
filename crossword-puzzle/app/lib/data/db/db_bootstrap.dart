@@ -12,11 +12,27 @@ class DbBootstrap {
   DbBootstrap._();
 
   /// 앱 시작 시 1회. 시드 적재 → DB 오픈 → 스키마 버전 확인.
+  ///
+  /// 스키마가 안 맞으면(`SchemaMismatch`) `makeReseeder()`(네이티브만 지원 —
+  /// `open_native.dart`/`open_web.dart`/`open_stub.dart` 참고)로 시드를 다시
+  /// 적재한다. 재적재 자체를 지원하지 않는 플랫폼(웹)이면 원래 `SchemaMismatch`를
+  /// 그대로 던진다. 재적재는 성공했는데 그 새 DB로도 여전히 검증이 실패하면
+  /// (자산 자체가 잘못 빌드된 경우) **그 두 번째 검증에서 나온 새 예외**가
+  /// 전파된다 — 재적재 전의 원래 예외가 아니다(03-02 "스키마 버전 불일치
+  /// 정책", 05-03 "구현 메모").
   static Future<AppDatabase> open() async {
     final executor = await openConnection();
     final db = AppDatabase(executor);
-    await verify(db);
-    return db;
+    try {
+      await verify(db);
+      return db;
+    } on SchemaMismatch {
+      final reseed = await makeReseeder();
+      if (reseed == null) rethrow;
+      final next = await reseed(db);
+      await verify(next);
+      return next;
+    }
   }
 
   /// `meta.schema_version` 과 단어 수를 검증한다.
@@ -37,10 +53,10 @@ class DbBootstrap {
 
 /// `meta.schema_version` 이 [expected] 와 다를 때 던진다.
 ///
-/// v1 정책: 시드와 앱 버전은 3단계 시점에 항상 일치해야 하므로, 여기서는
-/// 예외를 던지는 것으로 끝낸다. "시드로 덮어쓰기 + word_stat 보존" 재적재는
-/// 05-03(db_swapper) 완료 후 연결한다 (03-02 "스키마 버전 불일치 정책" 절,
-/// `open_native.dart` 의 TODO 참조).
+/// `DbBootstrap.open()`이 이 예외를 잡아 "시드로 덮어쓰기 + word_stat 보존"
+/// 재적재(`open_native.dart`의 `makeReseeder`, `DbSwapper.reseedFromAsset`)를
+/// 시도한다(03-02 "스키마 버전 불일치 정책" 절, 05-03). 재적재를 지원하지
+/// 않는 플랫폼(웹)에서는 여기까지만 오고 그대로 던져진다.
 class SchemaMismatch implements Exception {
   final int expected;
   final String? actual;

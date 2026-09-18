@@ -8,20 +8,93 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
+import 'package:sqlite3/sqlite3.dart' as sqlite3;
+
+import 'app_database.dart';
+import '../sync/db_swapper.dart';
 
 const _dbFileName = 'words.sqlite';
 const _asset = 'assets/words.sqlite';
 
-/// 앱 시작 시 1회 호출된다. 문서 디렉터리에 DB가 없으면(첫 실행, 또는
-/// 앱 삭제→재설치 후) assets의 시드를 복사한 뒤 연다. 있으면 그대로 연다.
+/// 앱 시작 시 1회 호출된다. 문서 디렉터리에 DB가 없으면(첫 실행, 앱
+/// 삭제→재설치 후, 또는 05-03의 원자 교체 도중 죽은 직후) 복구하거나
+/// assets의 시드를 복사한 뒤 연다. 있으면 그대로 연다.
 Future<QueryExecutor> openConnection() async {
-  final dir = await getApplicationDocumentsDirectory();
-  final file = File('${dir.path}/$_dbFileName');
-
-  if (!await file.exists()) {
-    await _copySeedFromBundle(file);
-  }
+  final file = await _dbFile();
+  await recoverOrCopySeed(file, _copySeedFromBundle);
   return NativeDatabase(file);
+}
+
+/// `db_bootstrap.dart`의 `DbBootstrap.open()`이 `SchemaMismatch`를 잡으면
+/// 이 함수가 만든 재적재 함수를 호출한다(03-02 "스키마 버전 불일치 정책").
+/// 네이티브에서는 항상 값이 있다 — 웹/스텁의 같은 이름 함수는 `null`을
+/// 반환해 그 플랫폼엔 재적재 기능이 없음을 나타낸다(05-sync: 갱신은 1차
+/// 범위에서 웹 제외).
+Future<Future<AppDatabase> Function(AppDatabase)?> makeReseeder() async {
+  final file = await _dbFile();
+  final swapper = DbSwapper(
+    open: (f) => AppDatabase(NativeDatabase(f)),
+    currentFile: file,
+  );
+  return swapper.reseedFromAsset;
+}
+
+Future<File> _dbFile() async {
+  final dir = await getApplicationDocumentsDirectory();
+  return File('${dir.path}/$_dbFileName');
+}
+
+/// [file] 이 있으면 [file] 이 정상적으로 열릴 때만 오래된 `.bak`을 정리하고
+/// 끝낸다. [file] 이 없으면 `.bak`(05-03의 원자 교체가 `rename` 사이에
+/// 죽으면 남는 흔적 — `db_swapper.dart` "백업 파일" 참고)을 되돌리거나,
+/// 그것도 없으면 [copySeed] 로 시드를 채운다.
+///
+/// **`.bak`을 [file]이 있다는 이유만으로 지우지 않는다.** "성공한 교체
+/// 이후 `.bak` 삭제 단계만 실패한" 정상적인 경우와 "교체 중 뭔가 실패해
+/// `words.sqlite`가 손상된 채로 남은" 비정상적인 경우를 [file]의 존재
+/// 여부만으로는 구분할 수 없다 — 후자에서 지우면 유저 통계가 든 유일한
+/// 사본을 영구히 잃는다(05-03 리뷰에서 실제로 발견된 경로). 그래서 [file]
+/// 이 최소한 열리고 `word` 테이블을 읽을 수 있는지 가볍게 확인한 뒤에만
+/// 지운다 — 05-03 "막히면"의 "`.bak`이 계속 쌓임" 권고를 안전하게 실행한다.
+///
+/// `rootBundle`/`path_provider` 에 기대지 않는 순수 함수라 테스트가 쉽다
+/// (03-02 "테스트" 절과 같은 이유) — `test/data/bootstrap_test.dart` 가 가짜
+/// [copySeed] 콜백으로 직접 검증한다.
+Future<void> recoverOrCopySeed(
+    File file, Future<void> Function(File target) copySeed) async {
+  final backup = File('${file.path}.bak');
+
+  if (await file.exists()) {
+    if (await backup.exists() && _opensCleanly(file)) {
+      try {
+        await backup.delete();
+      } catch (_) {}
+    }
+    return;
+  }
+
+  if (await backup.exists()) {
+    await backup.rename(file.path);
+    return;
+  }
+  await copySeed(file);
+}
+
+/// [file] 이 최소한의 sqlite 파일로 열리고 `word` 테이블을 읽을 수 있는가.
+/// `.bak` 정리를 안전할 때만 하기 위한 가벼운 확인이다 — `DbBootstrap.verify`
+/// 만큼 엄격하지 않다(schema_version까지는 안 본다).
+bool _opensCleanly(File file) {
+  try {
+    final db = sqlite3.sqlite3.open(file.path, mode: sqlite3.OpenMode.readOnly);
+    try {
+      db.select('SELECT 1 FROM word LIMIT 1');
+      return true;
+    } finally {
+      db.close();
+    }
+  } catch (_) {
+    return false;
+  }
 }
 
 Future<void> _copySeedFromBundle(File target) async {
@@ -60,11 +133,3 @@ Future<void> _atomicWrite(Uint8List bytes, File target) async {
   await tmp.writeAsBytes(bytes, flush: true);
   await tmp.rename(target.path);
 }
-
-// TODO(05-03): schema_version 불일치 시 정책은 "시드로 덮어쓰기 + word_stat
-// 보존" 한 가지뿐이다 (03-02 "스키마 버전 불일치 정책" 절). 이 재적재
-// (reseedPreservingStats) 는 05-03의 db_swapper와 구현이 거의 같으므로 여기서
-// 새로 만들지 않고 05-03에서 만든 것을 재사용한다. 3단계 시점에는 시드와 앱
-// 버전이 항상 일치하므로, 지금은 DbBootstrap.verify가 SchemaMismatch를 던지는
-// 것으로 충분하다. 05-03 완료 후 이 TODO를 해소하고 openConnection()에서
-// SchemaMismatch를 잡아 재적재를 호출하도록 연결한다.
