@@ -148,6 +148,11 @@ word_char  역색인                  "~와 ~를 포함한 단어" 질의용
   `schema_contract_test.dart`를 고치고 `dart test`로 검증해야 해서 이번에도 스키마는
   그대로 뒀다. 대신 `config.MAX_WORDS`(02-08)로 표제어 수 자체를 줄여 용량 목표를
   맞췄다 — `word_char` 제거는 여전히 유효한 다음 단계이지 폐기된 게 아니다.
+- **갱신(SyncService)은 Wi-Fi 전용을 기본값으로 켠다** (05-sync.md 리스크 절: "10MB
+  다운로드를 모바일 데이터에서 → Wi-Fi 전용 옵션 기본 켬"). `SettingsModel.wifiOnlySync`
+  기본값 `true`(04-06에서 이미 그렇게 구현됨), 05-02의 `SyncService.sync({wifiOnly: true})`
+  기본값도 동일하게 맞췄다. 설정에서 언제든 끌 수 있고, "지금 갱신"(수동, `force: true`)은
+  이 조건 자체를 무시한다.
 
 ---
 
