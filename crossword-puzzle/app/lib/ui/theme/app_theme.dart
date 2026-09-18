@@ -4,9 +4,12 @@
 // (07-02-03). `ColorScheme` 매핑은 UI-GUIDE 2.2 마지막 줄 + 07-02-03 표,
 // `TextTheme` 매핑은 UI-GUIDE 2.4 마지막 줄, 컴포넌트 테마는 UI-GUIDE 2.5·4절.
 //
-// `pageTransitionsTheme`(E-09)는 여기서 넣지 않는다 — 07-07 몫이다.
+// `pageTransitionsTheme`(E-09, 07-07-01)은 전 플랫폼에서 같은 페이드 스루를
+// 쓰도록 6개 `TargetPlatform` 전부를 `FadeThroughPageTransitionsBuilder`로
+// 채운다(웹·데스크톱 포함). `const` 컬렉션에는 `for`를 못 쓰므로 손으로 적는다.
 import 'package:flutter/material.dart';
 
+import 'fade_through_route.dart';
 import 'motion.dart';
 import 'tokens.dart';
 
@@ -56,6 +59,14 @@ ThemeData _build(GameColors c, Brightness brightness) {
     scaffoldBackgroundColor: c.surface,
     textTheme: textTheme,
     extensions: <ThemeExtension<dynamic>>[c, GameMotion.standard],
+    pageTransitionsTheme: const PageTransitionsTheme(builders: {
+      TargetPlatform.android: FadeThroughPageTransitionsBuilder(),
+      TargetPlatform.iOS: FadeThroughPageTransitionsBuilder(),
+      TargetPlatform.windows: FadeThroughPageTransitionsBuilder(),
+      TargetPlatform.linux: FadeThroughPageTransitionsBuilder(),
+      TargetPlatform.macOS: FadeThroughPageTransitionsBuilder(),
+      TargetPlatform.fuchsia: FadeThroughPageTransitionsBuilder(),
+    }),
     appBarTheme: AppBarTheme(
       backgroundColor: c.surface,
       foregroundColor: c.ink,

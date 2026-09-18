@@ -38,6 +38,7 @@ import 'ui/settings/settings_page.dart';
 import 'ui/state/app_scope.dart';
 import 'ui/state/settings_model.dart';
 import 'ui/theme/app_theme.dart';
+import 'ui/theme/fade_through_route.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -94,6 +95,13 @@ Map<String, WidgetBuilder> buildRoutes() => {
       '/settings': (_) => const SettingsPage(),
     };
 
+/// `buildRoutes()`의 빌더를 E-09 지속 시간을 갖는 [GameRoute]로 감싼다
+/// (07-07-01).
+Route<dynamic>? onGenerateGameRoute(RouteSettings settings) {
+  final builder = buildRoutes()[settings.name];
+  return builder == null ? null : GameRoute<void>(builder: builder, settings: settings);
+}
+
 class JGameApp extends StatelessWidget {
   /// 테스트에서는 실 `DbBootstrap.open()`을 건너뛰고 가짜 [AppScope]를 담은
   /// Future(완료/미완료/에러)를 바로 주입한다 — 04-01 "막히면":
@@ -137,7 +145,7 @@ class JGameApp extends StatelessWidget {
               darkTheme: buildDarkTheme(),
               themeMode: settings.themeMode,
               initialRoute: '/',
-              routes: buildRoutes(),
+              onGenerateRoute: onGenerateGameRoute,
             ),
           ),
         );

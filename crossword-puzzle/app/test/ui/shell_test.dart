@@ -133,7 +133,8 @@ void main() {
     await tester.pumpAndSettle();
 
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
-    expect(app.routes?.keys, containsAll(['/', '/play', '/result', '/settings']));
+    expect(buildRoutes().keys, containsAll(['/', '/play', '/result', '/settings']));
+    expect(app.onGenerateRoute, isNotNull);
 
     final navigator = tester.state<NavigatorState>(find.byType(Navigator));
 
