@@ -121,6 +121,7 @@ class _PuzzleBodyState extends State<_PuzzleBody> {
                     answers: model.answers,
                     selected: selected,
                     result: model.result,
+                    focusedCell: model.focusedCell,
                     onCellTap: model.selectCell,
                   ),
                 ),

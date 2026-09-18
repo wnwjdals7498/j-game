@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/model/puzzle.dart';
 import '../../domain/model/submit_result.dart';
+import '../theme/tokens.dart';
 import 'grid_painter.dart';
 
 /// 로컬 탭 좌표를 격자 셀 (row, col)로 바꾼다. 범위 밖이거나 검은 칸이면
@@ -40,6 +41,11 @@ class PuzzleGridView extends StatelessWidget {
   /// 제출 후에만 non-null. null이면 제출 전 모드(정답 미노출).
   final SubmitResult? result;
 
+  /// 마지막으로 탭한 셀. 커서 셀 표시(E-03, `GridPainter` 3층)에 쓴다.
+  /// null이면 커서를 그리지 않는다. `selected`·`result`와 같은 결로 required —
+  /// 호출부에서 빠뜨리면 커서가 조용히 사라진다.
+  final (int, int)? focusedCell;
+
   /// 검은 칸이 아닌 셀을 탭했을 때 호출. 단어 선택 로직은 04-03이 처리한다.
   final void Function(int row, int col) onCellTap;
 
@@ -49,12 +55,13 @@ class PuzzleGridView extends StatelessWidget {
     required this.answers,
     required this.selected,
     required this.result,
+    required this.focusedCell,
     required this.onCellTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final colors = GameColors.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         // 격자는 정사각형이고 가용 폭에 맞춘다(문서 "레이아웃 계산"). 높이가
@@ -73,6 +80,7 @@ class PuzzleGridView extends StatelessWidget {
                 puzzle: puzzle,
                 answers: answers,
                 selected: selected,
+                focusedCell: focusedCell,
                 result: result,
                 colors: colors,
                 cell: cell,

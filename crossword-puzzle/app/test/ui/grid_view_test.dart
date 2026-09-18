@@ -8,6 +8,8 @@ import 'package:jgame/domain/model/puzzle.dart';
 import 'package:jgame/domain/model/submit_result.dart';
 import 'package:jgame/ui/puzzle/grid_painter.dart';
 import 'package:jgame/ui/puzzle/grid_view.dart';
+import 'package:jgame/ui/theme/app_theme.dart';
+import 'package:jgame/ui/theme/tokens.dart';
 
 /// width×height 격자. (0,0)만 검은 칸, 나머지는 '가'로 채운 더미 정답.
 /// 이 테스트는 탭 변환·구조만 보므로 실제로 풀리는 단어 배치는 필요 없다.
@@ -43,14 +45,16 @@ GridPainter _painter(
   Puzzle puzzle, {
   Map<(int, int), String> answers = const {},
   PlacedWord? selected,
+  (int, int)? focusedCell,
   SubmitResult? result,
 }) =>
     GridPainter(
       puzzle: puzzle,
       answers: answers,
       selected: selected,
+      focusedCell: focusedCell,
       result: result,
-      colors: const ColorScheme.light(),
+      colors: GameColors.light,
       cell: 40,
     );
 
@@ -66,6 +70,7 @@ void main() {
   Future<(int, int)?> tapAndCapture(WidgetTester tester, Offset local) async {
     (int, int)? tapped;
     await tester.pumpWidget(MaterialApp(
+      theme: buildLightTheme(), // PuzzleGridView가 GameColors.of(context)를 읽는다
       home: Scaffold(
         body: Center(
           child: PuzzleGridView(
@@ -73,6 +78,7 @@ void main() {
             answers: const {},
             selected: null,
             result: null,
+            focusedCell: null,
             onCellTap: (r, c) => tapped = (r, c),
           ),
         ),
@@ -109,6 +115,7 @@ void main() {
 
   testWidgets('격자 크기: 5×5 퍼즐 → 위젯 크기가 정사각형', (tester) async {
     await tester.pumpWidget(MaterialApp(
+      theme: buildLightTheme(), // PuzzleGridView가 GameColors.of(context)를 읽는다
       home: Scaffold(
         body: Center(
           child: PuzzleGridView(
@@ -116,6 +123,7 @@ void main() {
             answers: const {},
             selected: null,
             result: null,
+            focusedCell: null,
             onCellTap: (_, _) {},
           ),
         ),
