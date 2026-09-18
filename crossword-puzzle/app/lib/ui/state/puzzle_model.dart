@@ -11,6 +11,7 @@ import '../../domain/model/level_spec.dart';
 import '../../domain/model/puzzle.dart';
 import '../../domain/model/submit_result.dart';
 import '../../domain/scoring/scorer.dart';
+import '../puzzle/puzzle_sheets.dart';
 import 'app_scope.dart';
 import 'settings_model.dart';
 
@@ -184,24 +185,8 @@ class PuzzleModel extends ChangeNotifier {
   Future<void> submit(BuildContext context) async {
     final blanks = Scorer.blankCellCount(puzzle!, answers); // 01-08
 
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('제출하시겠습니까?'),
-        content: Text(blanks > 0
-            ? '빈 칸이 $blanks개 있습니다. 빈 칸은 오답으로 처리됩니다.'
-            : '모든 칸을 채웠습니다.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(c, false),
-              child: const Text('계속 풀기')),
-          FilledButton(
-              onPressed: () => Navigator.pop(c, true),
-              child: const Text('제출')),
-        ],
-      ),
-    );
-    if (ok != true) return;
+    final ok = await showSubmitConfirmSheet(context, blanks: blanks);
+    if (!ok) return;
 
     try {
       final isFirst =
@@ -219,17 +204,7 @@ class PuzzleModel extends ChangeNotifier {
       // 풀기"와 같은 경로로 처리해 결과 화면으로 넘어가지 않으므로, 통계를
       // 반영 못 한 채로 반영된 것처럼 보이는 일은 없다 — 대신 원인을 알린다.
       if (!context.mounted) return;
-      await showDialog<void>(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: const Text('제출할 수 없습니다'),
-          content: const Text(
-              '단어 데이터에 문제가 생겼습니다. 앱을 다시 시작한 뒤 다시 시도해 주세요.'),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(c), child: const Text('확인')),
-          ],
-        ),
-      );
+      await showSubmitErrorSheet(context);
     }
   }
 

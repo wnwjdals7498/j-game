@@ -135,6 +135,7 @@ SubmitResult _threeWordResult({bool isFirstSubmit = true}) {
 /// 뒤 [_confirmDialog]/[_cancelDialog]로 직접 닫는다.
 Future<void> _openSubmitDialog(WidgetTester tester, PuzzleModel model) async {
   await tester.pumpWidget(MaterialApp(
+    theme: buildLightTheme(), // 07-04-04: 시트가 GameColors.of(context)를 읽는다
     home: Builder(
       builder: (context) => Scaffold(
         body: ElevatedButton(

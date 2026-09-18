@@ -48,8 +48,8 @@ import 'package:jgame/domain/model/level_spec.dart';
 import 'package:jgame/domain/model/puzzle.dart';
 import 'package:jgame/domain/scoring/scorer.dart';
 import 'package:jgame/ui/home/home_page.dart';
+import 'package:jgame/ui/puzzle/clue_bar.dart';
 import 'package:jgame/ui/puzzle/grid_view.dart';
-import 'package:jgame/ui/puzzle/hint_panel.dart';
 import 'package:jgame/ui/puzzle/puzzle_page.dart';
 import 'package:jgame/ui/theme/app_theme.dart';
 import 'package:jgame/ui/result/result_page.dart';
@@ -157,7 +157,7 @@ void main() {
       final (tr, tc) = tapWord.cells.first;
       await tester.tapAt(cellCenter(tester, puzzle, tr, tc));
       await tester.pumpAndSettle();
-      expect(find.byType(HintPanel), findsOneWidget);
+      expect(find.byType(ClueBar), findsOneWidget);
       final selected = model.selected;
       expect(selected, isNotNull);
       expect(puzzle.wordsAt(tr, tc), contains(selected),
@@ -217,7 +217,7 @@ void main() {
       expect(selected, isNotNull);
       expect(puzzle.wordsAt(r, c), contains(selected));
 
-      final panel = tester.widget<HintPanel>(find.byType(HintPanel));
+      final panel = tester.widget<ClueBar>(find.byType(ClueBar));
       expect(panel.selected, same(selected),
           reason: '힌트 패널이 탭으로 선택된 단어를 그대로 받아야 한다');
       expect(panel.hintText, model.hintTextFor(selected!, HintMode.definition));
@@ -360,7 +360,7 @@ void main() {
       addTearDown(db.close);
       // selection_test.dart(04-03) "힌트 선택" 그룹과 같은 값. 여기서는
       // `PuzzleModel.hintTextFor`(모델 로직)가 아니라 그 값을 받은
-      // `HintPanel`(표시 전용 위젯, hint_panel.dart 주석)이 실제로 다른
+      // `ClueBar`(표시 전용 위젯)가 실제로 다른
       // 텍스트를 그리는지를 본다.
       final model = PuzzleModel(buildScope(db), levels.first);
       model.hints = {
@@ -376,11 +376,15 @@ void main() {
       );
 
       Widget wrapHint(HintMode mode) => MaterialApp(
+            theme: buildLightTheme(), // ClueBar가 GameColors.of(context)를 읽는다
             home: Scaffold(
-              body: HintPanel(
+              body: ClueBar(
                 selected: word,
                 number: 1,
                 hintText: model.hintTextFor(word, mode),
+                onPrev: () {},
+                onNext: () {},
+                child: const SizedBox.shrink(),
               ),
             ),
           );
