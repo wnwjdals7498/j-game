@@ -174,7 +174,7 @@ class _BenchmarkPageState extends State<BenchmarkPage> {
             ],
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text('오류: $_error', style: const TextStyle(color: Colors.red)),
+              Text('오류: $_error', style: TextStyle(color: Theme.of(context).colorScheme.error)),
             ],
             if (m != null) ...[
               const SizedBox(height: 16),

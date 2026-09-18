@@ -197,7 +197,7 @@ class _Trailing extends StatelessWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.star, color: Colors.amber),
+          Icon(Icons.star, color: Theme.of(context).colorScheme.tertiary),
           const SizedBox(width: 4),
           Text('${score >= 0 ? '+' : ''}$score'),
         ],
