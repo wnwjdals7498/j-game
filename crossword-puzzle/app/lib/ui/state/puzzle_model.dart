@@ -100,14 +100,25 @@ class PuzzleModel extends ChangeNotifier {
 
   /// 격자에 단어 입력을 분배한다 (04-04 "격자에 분배"). 교차 셀은 **마지막
   /// 입력이 이긴다** — 이 메서드가 그대로 덮어쓰므로 별도 처리가 필요 없다.
+  ///
+  /// **버그 수정**: 예전엔 `text.length`를 넘는 칸을 전부 지웠다. 그런데
+  /// [w]의 칸 중 아직 입력이 도달하지 않은 뒤쪽 칸이 **다른, 이미 완성된
+  /// 교차 단어의 칸**일 수 있다 — 그 경우 이 단어를 타이핑하는 매 키 입력마다
+  /// (아직 그 칸까지 안 왔다는 이유만으로) 다른 단어가 채운 값을 지워버렸다
+  /// ("겹치는 칸을 채울 때 전부 지워짐" 버그). [prevLen]([textOf]가 이 호출
+  /// *전* 시점에 돌려주는, 이 단어 관점에서 "이미 연속으로 채워져 있던"
+  /// 길이)보다 앞쪽 칸만 지운다 — 그래야 "이 단어로 이미 도달했던 칸을
+  /// 백스페이스로 지우는" 경우만 지워지고, "아직 안 왔을 뿐인, 남이 채운 칸"은
+  /// 안 건드린다.
   void setWordInput(PlacedWord w, String text) {
+    final prevLen = textOf(w).length;
     final next = Map<(int, int), String>.of(answers);
     var i = 0;
     for (final (r, c) in w.cells) {
       if (i < text.length) {
         next[(r, c)] = text[i];
-      } else {
-        next.remove((r, c)); // 지운 만큼 비운다
+      } else if (i < prevLen) {
+        next.remove((r, c)); // 이 단어로 이미 도달했던 칸만 지운다
       }
       i++;
     }

@@ -62,6 +62,45 @@ Puzzle _crossPuzzle() {
   );
 }
 
+/// "겹치는 칸 보존" 테스트용 3×2 격자.
+/// - '가나다' 세로 (0,0)~(2,0)
+/// - '나라' 가로 (1,0)~(1,1) — (1,0)에서 '가나다'의 **둘째 칸**과 교차
+///   (교차점이 첫 칸이 아니라, 타이핑이 아직 안 온 "뒤쪽" 칸이어야 버그가
+///   재현된다 — `_crossPuzzle`처럼 원점에서만 겹치면 재현이 안 된다).
+Puzzle _midCrossPuzzle() {
+  const width = 2, height = 3;
+  final cells = List.generate(
+    height,
+    (r) => List.generate(width, (c) => const Cell.filled('가')),
+  );
+  return Puzzle(
+    levelId: 1,
+    width: width,
+    height: height,
+    cells: cells,
+    words: const [
+      PlacedWord(
+        headword: '가나다',
+        row: 0,
+        col: 0,
+        dir: Direction.down,
+        isCore: false,
+        tier: 1,
+      ),
+      PlacedWord(
+        headword: '나라',
+        row: 1,
+        col: 0,
+        dir: Direction.across,
+        isCore: false,
+        tier: 1,
+      ),
+    ],
+    seed: 1,
+    attempts: 1,
+  );
+}
+
 LevelSpec _spec() => const LevelSpec(
       id: 1,
       name: 'test',
@@ -259,6 +298,35 @@ void main() {
       final word = model.puzzle!.words.first;
       model.setWordInput(word, '사과');
       expect(model.textOf(word), '사과');
+    });
+
+    test(
+        '겹치는 칸 보존: 세로 입력이 아직 안 온 칸(다른 단어가 채운 교차 칸)을 '
+        '지우지 않는다', () {
+      final model = newModel()..puzzle = _midCrossPuzzle();
+      final down = model.puzzle!.words[0]; // '가나다' 세로, (0,0)(1,0)(2,0)
+      final across = model.puzzle!.words[1]; // '나라' 가로, (1,0)(1,1)
+
+      // 먼저 가로를 완성해 교차 칸 (1,0)='나'를 채워 둔다.
+      model.setWordInput(across, '나라');
+      expect(model.answers[(1, 0)], '나');
+
+      // 세로를 한 글자만 입력 — 아직 (1,0)에 안 왔다. 예전 버그는 여기서
+      // (1,0)('나')과 (2,0)을 곧장 지웠다.
+      model.setWordInput(down, '가');
+      expect(model.answers[(0, 0)], '가');
+      expect(model.answers[(1, 0)], '나', reason: '가로가 채운 교차 칸이 지워지면 안 된다');
+
+      // 세로 입력이 실제로 그 칸까지 오면(값이 같으므로) 그대로 유지된다.
+      model.setWordInput(down, '가나');
+      expect(model.answers[(1, 0)], '나');
+
+      // 세로를 완전히 채운 뒤 되돌아가며 지우면(백스페이스), 세로 스스로
+      // 도달했던 칸까지는 정상적으로 지워진다.
+      model.setWordInput(down, '가나다');
+      expect(model.answers[(2, 0)], '다');
+      model.setWordInput(down, '가나');
+      expect(model.answers.containsKey((2, 0)), isFalse);
     });
 
     test('answers 새 맵: setWordInput 후 이전 맵과 다른 인스턴스', () {
