@@ -19,6 +19,7 @@ import '../../domain/levels.dart';
 import '../../domain/measure/measure_runner.dart';
 import '../../domain/model/level_spec.dart';
 import '../../domain/repository/word_repository.dart';
+import '../theme/tokens.dart';
 
 /// 실기기 벤치마크 화면. [repo] 는 실 DB([DriftWordRepository]) 를 주입받는다.
 /// 이 파일은 `ui/` 라 drift를 직접 알아도 되지만, 데스크톱/테스트에서도 같은
@@ -144,6 +145,8 @@ class _BenchmarkPageState extends State<BenchmarkPage> {
   @override
   Widget build(BuildContext context) {
     final m = _result;
+    final c = GameColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(title: const Text('벤치마크 (임시 · 03-05)')),
       body: Padding(
@@ -162,7 +165,7 @@ class _BenchmarkPageState extends State<BenchmarkPage> {
                   : (l) => setState(() => _selected = l ?? _selected),
             ),
             const SizedBox(height: 12),
-            ElevatedButton(
+            FilledButton(
               onPressed: _running ? null : _runBenchmark,
               child: Text('$_runsPerLevel회 실행'),
             ),
@@ -170,15 +173,16 @@ class _BenchmarkPageState extends State<BenchmarkPage> {
             if (_running) ...[
               LinearProgressIndicator(value: _done / _runsPerLevel),
               const SizedBox(height: 8),
-              Text('$_done / $_runsPerLevel'),
+              Text('$_done / $_runsPerLevel', style: textTheme.bodyLarge),
             ],
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text('오류: $_error', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text('오류: $_error',
+                  style: textTheme.bodyLarge?.copyWith(color: c.danger)),
             ],
             if (m != null) ...[
               const SizedBox(height: 16),
-              Text(_summaryText(m)),
+              Text(_summaryText(m), style: textTheme.bodyLarge),
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: _copyResult,

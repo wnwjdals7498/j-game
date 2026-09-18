@@ -18,6 +18,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../common/empty_state.dart';
+import '../common/loading_view.dart';
+import '../theme/tokens.dart';
+
 class LicenseNoticePage extends StatelessWidget {
   const LicenseNoticePage({super.key});
 
@@ -29,16 +33,25 @@ class LicenseNoticePage extends StatelessWidget {
         future: loadLicenseText(),
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
+            return const GameLoadingView();
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Text('출처 표기를 불러오지 못했습니다.\n${snapshot.error}'),
+            return GameEmptyState(
+              title: '출처 표기를 불러오지 못했습니다.',
+              message: '${snapshot.error}',
             );
           }
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: SelectableText(snapshot.data ?? ''),
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560), // 4절 "본문 최대 폭"
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(GameSpace.l),
+                child: SelectableText(
+                  snapshot.data ?? '',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+            ),
           );
         },
       ),

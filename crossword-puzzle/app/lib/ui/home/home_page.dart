@@ -8,10 +8,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/sync/sync_result.dart' show pendingSyncNoticePrefsKey;
 import '../../domain/model/level_spec.dart';
+import '../common/empty_state.dart';
+import '../common/loading_view.dart';
 import '../puzzle/puzzle_page.dart';
 import '../state/app_scope.dart';
 import '../state/home_model.dart';
 import '../state/puzzle_model.dart';
+import '../theme/fade_through_route.dart';
 import '../theme/tokens.dart';
 import 'hero_card.dart';
 import 'level_card.dart';
@@ -27,7 +30,7 @@ const double _maxBodyWidth = 560;
 void _openLevel(BuildContext context, LevelSpec spec) {
   final model = context.read<HomeModel>();
   Navigator.of(context)
-      .push(MaterialPageRoute(
+      .push(GameRoute(
         builder: (_) => PuzzlePage(spec: spec, seed: newSeed()),
       ))
       .then((_) {
@@ -105,16 +108,11 @@ class _HomeBody extends StatelessWidget {
         ],
       ),
       body: model.loading && model.statuses.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? const GameLoadingView()
           : model.error != null
-              ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text(
-                      '단어 데이터를 불러오지 못했습니다.\n앱을 다시 시작해 주세요.',
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+              ? const GameEmptyState(
+                  title: '단어 데이터를 불러오지 못했습니다.',
+                  message: '앱을 다시 시작해 주세요.',
                 )
               : Center(
                   child: ConstrainedBox(

@@ -20,10 +20,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/levels.dart';
 import '../../domain/model/level_spec.dart';
 import '../../domain/model/puzzle.dart';
+import '../common/empty_state.dart';
+import '../common/loading_view.dart';
 import '../result/result_page.dart';
 import '../state/app_scope.dart';
 import '../state/puzzle_model.dart';
 import '../state/settings_model.dart';
+import '../theme/fade_through_route.dart';
 import '../theme/motion.dart';
 import '../theme/tokens.dart';
 import 'clue_bar.dart';
@@ -114,14 +117,17 @@ class _PuzzleBodyState extends State<_PuzzleBody> {
     if (model.loading) {
       return Scaffold(
         appBar: AppBar(title: Text(model.spec.name)),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const GameLoadingView(),
       );
     }
     final puzzle = model.puzzle;
     if (model.error != null || puzzle == null) {
       return Scaffold(
         appBar: AppBar(title: Text(model.spec.name)),
-        body: Center(child: Text('퍼즐을 만들지 못했습니다.\n${model.error}')),
+        body: GameEmptyState(
+          title: '퍼즐을 만들지 못했습니다.',
+          message: '${model.error}',
+        ),
       );
     }
 
@@ -186,16 +192,7 @@ class _PuzzleBodyState extends State<_PuzzleBody> {
                         selected: selected,
                         result: model.result,
                         focusedCell: model.focusedCell,
-                        onCellTap: (r, c) {
-                          // H-01: 탭으로 선택된 단어가 실제로 바뀔 때만 1회.
-                          // `PlacedWord`는 `==`를 재정의하지 않으므로(01-01)
-                          // 인스턴스 비교로 판정한다.
-                          final before = model.selected;
-                          model.selectCell(r, c);
-                          if (!identical(model.selected, before)) {
-                            HapticFeedback.selectionClick();
-                          }
-                        },
+                        onCellTap: (r, c) => _onCellTap(context, model, r, c),
                       ),
                     ),
                   ),
@@ -261,7 +258,7 @@ class _PuzzleBodyState extends State<_PuzzleBody> {
     if (result == null) return; // 다이얼로그에서 "계속 풀기"를 골랐다.
 
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      GameRoute(
         builder: (_) => ResultPage(
           spec: model.spec,
           puzzle: model.puzzle,
@@ -277,6 +274,24 @@ class _PuzzleBodyState extends State<_PuzzleBody> {
     );
   }
 
+  /// 셀 탭 (07-04-05 H-01 + 07-07-04 S-01). `PuzzleGridView.onCellTap`
+  /// 서명(`void Function(int row, int col)`)은 `build()`의 클로저가 맞추고,
+  /// 이 메서드는 그 안에서 필요한 `context`·`model`을 추가로 받는다.
+  void _onCellTap(BuildContext context, PuzzleModel model, int row, int col) {
+    // H-01: 탭으로 선택된 단어가 실제로 바뀔 때만 1회. `PlacedWord`는 `==`를
+    // 재정의하지 않으므로(01-01) 인스턴스 비교로 판정한다.
+    final before = model.selected;
+    model.selectCell(row, col);
+    if (!identical(model.selected, before)) {
+      HapticFeedback.selectionClick();
+    }
+    // S-01: 설정이 켜진 경우에만 클릭음. `watch`가 아니라 `read`로 읽는다 —
+    // 값이 바뀌었다고 퍼즐 화면을 다시 그릴 이유가 없다.
+    if (context.read<SettingsModel>().soundEnabled) {
+      SystemSound.play(SystemSoundType.click);
+    }
+  }
+
   /// "다음 레벨" (04-05 "버튼 동작"): 다음 레벨을 새 seed로 생성. 결과·현재
   /// 화면을 전부 걷어내고(`pushAndRemoveUntil`) 새 퍼즐 화면 하나만 남긴다 —
   /// 되돌아가도 이미 끝난 퍼즐이 다시 보이지 않게 하기 위함. 마지막 레벨이면
@@ -288,7 +303,7 @@ class _PuzzleBodyState extends State<_PuzzleBody> {
       return;
     }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
+      GameRoute(
         builder: (_) => PuzzlePage(spec: next, seed: newSeed()),
       ),
       (route) => route.isFirst,

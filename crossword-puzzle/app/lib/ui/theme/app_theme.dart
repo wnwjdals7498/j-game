@@ -97,6 +97,16 @@ ThemeData _build(GameColors c, Brightness brightness) {
         shape: const StadiumBorder(),
       ),
     ),
+    // UI-GUIDE 2.5 버튼 규격(알약형, 선택 = ink 배경 + surface 글자). 이
+    // 파일은 lib/ui/theme/라 Colors.transparent를 써도 INV-05 검사 대상 밖이다.
+    segmentedButtonTheme: SegmentedButtonThemeData(style: ButtonStyle(
+      shape: const WidgetStatePropertyAll(StadiumBorder()),
+      side: WidgetStatePropertyAll(BorderSide(color: c.line)),
+      textStyle: WidgetStatePropertyAll(GameType.label),
+      backgroundColor: WidgetStateProperty.resolveWith((s) =>
+          s.contains(WidgetState.selected) ? c.ink : Colors.transparent),
+      foregroundColor: WidgetStateProperty.resolveWith((s) =>
+          s.contains(WidgetState.selected) ? c.surface : c.ink))),
     dividerTheme: DividerThemeData(color: c.line, thickness: 1, space: 1),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: c.ink,
@@ -104,6 +114,10 @@ ThemeData _build(GameColors c, Brightness brightness) {
       shape: const StadiumBorder(),
       behavior: SnackBarBehavior.floating,
       elevation: 0,
+      // 하단 여백 16 = GameSpace.l (UI-GUIDE 4절·2.5). floating이라 퍼즐
+      // 화면의 제출 버튼 위로 뜬다.
+      insetPadding: const EdgeInsets.fromLTRB(
+          GameSpace.l, GameSpace.s, GameSpace.l, GameSpace.l),
     ),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: c.surface,

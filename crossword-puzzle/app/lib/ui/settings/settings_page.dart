@@ -7,8 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/db/app_database.dart';
 import '../../data/sync/sync_result.dart';
+import '../common/section_header.dart';
 import '../state/app_scope.dart';
 import '../state/settings_model.dart';
+import '../theme/fade_through_route.dart';
+import '../theme/tokens.dart';
 import 'license_page.dart';
 
 /// 06-01 "앱 이름 확정" — `AndroidManifest.xml`의 `android:label`,
@@ -26,7 +29,31 @@ class SettingsPage extends StatelessWidget {
       appBar: AppBar(title: const Text('설정')),
       body: ListView(
         children: [
-          const _SectionHeader('힌트'),
+          const SectionHeader('화면'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: GameSpace.l),
+            child: SegmentedButton<ThemeMode>(
+              segments: const [                        // showSelectedIcon: false —
+                ButtonSegment(value: ThemeMode.system, label: Text('시스템')),  // UI-GUIDE 1절
+                ButtonSegment(value: ThemeMode.light, label: Text('라이트')),  // "아이콘으로
+                ButtonSegment(value: ThemeMode.dark, label: Text('다크')),    //  빈 곳 채우기" 금지
+              ],
+              selected: {settings.themeMode},
+              showSelectedIcon: false,
+              onSelectionChanged: (s) =>
+                  context.read<SettingsModel>().setThemeMode(s.first),
+            ),
+          ),
+          SwitchListTile(
+            dense: true,
+            title: const Text('효과음'),
+            subtitle: const Text('기기의 터치음 설정을 따릅니다'),
+            value: settings.soundEnabled,
+            onChanged: (value) =>
+                context.read<SettingsModel>().setSoundEnabled(value),
+          ),
+          const Divider(),
+          const SectionHeader('힌트'),
           RadioGroup<HintMode>(
             groupValue: settings.hintMode,
             onChanged: (mode) {
@@ -35,10 +62,12 @@ class SettingsPage extends StatelessWidget {
             child: const Column(
               children: [
                 RadioListTile<HintMode>(
+                  dense: true,
                   value: HintMode.definition,
                   title: Text('뜻풀이'),
                 ),
                 RadioListTile<HintMode>(
+                  dense: true,
                   value: HintMode.association,
                   title: Text('연상어 (유의어 없으면 뜻풀이)'),
                 ),
@@ -46,46 +75,28 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
           const Divider(),
-          const _SectionHeader('단어 데이터'),
+          const SectionHeader('단어 데이터'),
           const _DbInfoSection(),
           const _SyncNowButton(),
           SwitchListTile(
+            dense: true,
             title: const Text('Wi-Fi에서만 갱신'),
             value: settings.wifiOnlySync,
             onChanged: (value) =>
                 context.read<SettingsModel>().setWifiOnlySync(value),
           ),
           const Divider(),
-          const _SectionHeader('정보'),
+          const SectionHeader('정보'),
           ListTile(
+            dense: true,
             title: const Text('출처 및 라이선스'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const LicenseNoticePage()),
+              GameRoute(builder: (_) => const LicenseNoticePage()),
             ),
           ),
           const _AppVersionSection(),
         ],
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader(this.title);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Text(
-        title,
-        style: Theme.of(context)
-            .textTheme
-            .titleSmall
-            ?.copyWith(color: Theme.of(context).colorScheme.primary),
       ),
     );
   }
@@ -173,6 +184,7 @@ class _DbInfoSectionState extends State<_DbInfoSection> {
     final lastSyncTile = FutureBuilder<int?>(
       future: _lastSyncFuture,
       builder: (context, syncSnapshot) => ListTile(
+        dense: true,
         title: const Text('마지막 갱신'),
         trailing: Text(_formatEpochMillis(syncSnapshot.data)),
       ),
@@ -186,6 +198,7 @@ class _DbInfoSectionState extends State<_DbInfoSection> {
           return Column(
             children: [
               const ListTile(
+                dense: true,
                 title: Text('단어 데이터'),
                 subtitle: Text('불러오지 못했습니다. 앱을 다시 시작해 주세요.'),
               ),
@@ -197,14 +210,17 @@ class _DbInfoSectionState extends State<_DbInfoSection> {
         return Column(
           children: [
             ListTile(
+              dense: true,
               title: const Text('버전'),
               trailing: Text(info?.version ?? '-'),
             ),
             ListTile(
+              dense: true,
               title: const Text('단어 수'),
               trailing: Text(_formatCount(info?.wordCount)),
             ),
             ListTile(
+              dense: true,
               title: const Text('빌드 시각'),
               trailing: Text(_formatDate(info?.builtAt)),
             ),
@@ -238,6 +254,7 @@ class _AppVersionSectionState extends State<_AppVersionSection> {
         return Column(
           children: [
             ListTile(
+              dense: true,
               title: const Text('오픈소스 라이선스'),
               trailing: const Icon(Icons.chevron_right),
               onTap: info == null
@@ -249,6 +266,7 @@ class _AppVersionSectionState extends State<_AppVersionSection> {
                       ),
             ),
             ListTile(
+              dense: true,
               title: const Text('앱 버전'),
               trailing: Text(
                 info == null ? '-' : '${info.version} (${info.buildNumber})',
@@ -331,9 +349,9 @@ class _SyncNowButtonState extends State<_SyncNowButton> {
         onPressed: _syncing ? null : () => _onPressed(syncService),
         child: _syncing
             ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                width: 64,
+                height: 2,
+                child: LinearProgressIndicator(minHeight: 2),
               )
             : const Text('지금 갱신'),
       ),

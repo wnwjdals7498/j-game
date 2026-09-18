@@ -8,6 +8,7 @@ enum HintMode { definition, association }
 
 const _keyHintMode = 'hintMode';
 const _keyThemeMode = 'themeMode';   // 값은 ThemeMode.name ('system' | 'light' | 'dark')
+const _keySoundEnabled = 'soundEnabled';
 
 /// `main.dart`의 자동 갱신(05-04)도 `SettingsModel` 인스턴스 없이 이 키로
 /// 직접 읽는다 — 부트스트랩 시점엔 아직 `SettingsModel`이 만들어지기 전이다.
@@ -27,6 +28,7 @@ class SettingsModel extends ChangeNotifier {
   HintMode hintMode = HintMode.definition;
   bool wifiOnlySync = true;
   ThemeMode themeMode = ThemeMode.system;
+  bool soundEnabled = false;
 
   bool loading = true;
 
@@ -42,6 +44,7 @@ class SettingsModel extends ChangeNotifier {
       (m) => m.name == savedTheme,
       orElse: () => ThemeMode.system,
     );
+    soundEnabled = prefs.getBool(_keySoundEnabled) ?? false;
 
     loading = false;
     notifyListeners();
@@ -69,5 +72,13 @@ class SettingsModel extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyThemeMode, mode.name);
+  }
+
+  Future<void> setSoundEnabled(bool value) async {
+    if (value == soundEnabled) return;
+    soundEnabled = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keySoundEnabled, value);
   }
 }

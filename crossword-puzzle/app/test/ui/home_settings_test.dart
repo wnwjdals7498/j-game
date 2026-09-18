@@ -133,7 +133,10 @@ void main() {
           Provider<AppScope>.value(value: scope),
           ChangeNotifierProvider<SettingsModel>.value(value: settings),
         ],
-        child: MaterialApp(home: const SettingsPage()),
+        child: MaterialApp(
+          theme: buildLightTheme(), // SectionHeader가 GameColors.of(context)를 읽는다
+          home: const SettingsPage(),
+        ),
       );
 
   group('홈 화면', () {
