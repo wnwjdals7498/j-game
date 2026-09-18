@@ -105,6 +105,12 @@ void main() {
 
   setUpAll(() {
     schemaSql = File('../tools/schema.sql').readAsStringSync();
+    // 07-08-01의 `flutter_test_config.dart`가 (폰트 로드를 위해) 모든 테스트
+    // 전에 `TestWidgetsFlutterBinding.ensureInitialized()`를 부르면서 전역
+    // `HttpOverrides`가 걸린다 — 모든 HTTP 요청이 400을 받는다(플러터 테스트
+    // 하네스의 기본 네트워크 차단). 이 파일은 로컬 루프백에 진짜 소켓을 여는
+    // 통합 테스트라 그 오버라이드를 되돌려야 한다.
+    HttpOverrides.global = null;
   });
 
   setUp(() async {

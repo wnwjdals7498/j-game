@@ -1,0 +1,4 @@
+# 골든은 기록한 OS·Flutter 버전에서만 비교한다(07-08 A절 "플랫폼 편차").
+# 로컬 DoD: flutter test --tags golden   /   CI: --exclude-tags golden (06-06)
+tags:
+  golden:
