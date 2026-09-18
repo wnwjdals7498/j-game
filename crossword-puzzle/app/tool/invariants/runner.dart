@@ -182,6 +182,13 @@ RuleResult _mustNotContain(Directory root, Rule rule) {
           final idx = line.indexOf(needle, pos);
           if (idx < 0) break;
           pos = idx + needle.length;
+          // 식별자 접두 오탐 방지: needle이 단어 문자로 시작하면, 그 앞이 단어
+          // 문자로 이어지는 경우(예: "GameColors."의 "Colors.")는 별개 식별자의
+          // 일부이지 위반이 아니다. needle이 '.'처럼 연산자로 시작하면 이 검사를
+          // 하지 않는다(예: "entry.headword"는 앞이 단어 문자여도 진짜 위반이다).
+          if (_isWordChar(needle[0]) && idx > 0 && _isWordChar(line[idx - 1])) {
+            continue;
+          }
           // INV-05 예외: Colors.transparent는 위반이 아니다.
           if (needle == 'Colors.' && line.startsWith('Colors.transparent', idx)) {
             continue;
