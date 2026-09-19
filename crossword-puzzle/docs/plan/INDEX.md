@@ -9,6 +9,8 @@
 
 `docs/plan/NN-MM.slug.md` — `NN`은 PLAN.md의 단계 번호, `MM`은 그 단계 안의 실행 순서.
 
+7단계는 한 단계 더 쪼개져 있다. `docs/plan/NN-MM-KK.slug.md` — `KK`는 `NN-MM` 안의 커밋 단위 실행 순서다. 이 경우 `NN-MM` 문서는 묶음 개요이고, 실제 작업은 `NN-MM-KK`를 따라간다.
+
 각 세부 계획 문서는 **한 번의 작업 세션에서 끝낼 수 있는 단위**로 잘려 있고, 아래 고정 구조를 가진다.
 
 | 절 | 뜻 |
@@ -113,6 +115,62 @@
 | [06-05.db-release-procedure.md](06-05.db-release-procedure.md) | AGENT | `docs/RELEASE.md` + 실제 릴리스 1회 |
 | [06-06.ci.md](06-06.ci.md) | AGENT | GitHub Actions (선택) |
 
+## 7단계 — UI v2 (NYT Games 톤 전면 개편)
+
+계약 문서: **[../UI-GUIDE.md](../UI-GUIDE.md)** (토큰·모션·이펙트 ID·Non-goal·불변 조건). 단계 개요: [07-ui-v2.md](07-ui-v2.md).
+
+| 문서 | 담당 | 내용 |
+|---|---|---|
+| [07-01.invariants-guard.md](07-01.invariants-guard.md) | AGENT | Non-goal 고정, `tool/check_invariants.dart`, 보호 테스트·문구·의존성 감시 |
+| [07-02.theme-tokens-fonts.md](07-02.theme-tokens-fonts.md) | AGENT | `GameColors`/`GameMotion` ThemeExtension, 라이트·다크, Pretendard 번들, 대비 테스트 |
+| [07-03.grid-renewal.md](07-03.grid-renewal.md) | AGENT | 격자 토큰 전환, 커서 셀, 코어 원형 마크, E-01~E-03 |
+| [07-04.puzzle-screen.md](07-04.puzzle-screen.md) | AGENT | 힌트 바 + 입력 통합, 진행 표시, 제출 버튼 E-05, 바텀 시트, 햅틱 |
+| [07-05.home-screen.md](07-05.home-screen.md) | AGENT | 이어하기 히어로, 레벨 카드 격자, E-10 (07-02 후 병렬) |
+| [07-06.result-screen.md](07-06.result-screen.md) | AGENT | 점수 카운트업 E-06, 행 순차 등장 E-07, 해제 연출 E-08 (07-02 후 병렬) |
+| [07-07.secondary-screens-motion.md](07-07.secondary-screens-motion.md) | AGENT | 설정·라이선스·부트스트랩 토큰 적용, 전환 E-09, 로딩 E-11, 테마 모드·효과음 |
+| [07-08.golden-and-device-check.md](07-08.golden-and-device-check.md) | MIXED | 골든 3화면×2테마, 실기기·IME 재검증, 스토어 에셋·아이콘 결정 |
+
+### 세부 문서 (`07-XX-YY`) — 실제 작업 단위
+
+7단계만 한 단계 더 쪼개져 있다. 위 표의 `07-XX`는 **묶음 개요**이고, 아래 `07-XX-YY`가 **커밋 1개 = 한 번에 끝내는 작업 단위**다. 작업은 아래 순서대로 한다.
+
+| 묶음 | 문서 | 담당 | 내용 |
+|---|---|---|---|
+| 07-01 | [07-01-01.rule-schema.md](07-01-01.rule-schema.md) | AGENT | 하드코딩 색 3곳 정리 + 규칙 데이터 선언 |
+| | [07-01-02.invariant-runner.md](07-01-02.invariant-runner.md) | AGENT | 실행기 6종 검사, 출력 형식, exit code |
+| | [07-01-03.runner-selftest.md](07-01-03.runner-selftest.md) | AGENT | 위반 fixture + 스크립트 자체 테스트 |
+| | [07-01-04.verification-convention.md](07-01-04.verification-convention.md) | AGENT | 검증 3종 관례, CI, INV 표 1:1 대조 |
+| 07-02 | [07-02-01.color-tokens.md](07-02-01.color-tokens.md) | AGENT | `GameColors`, `GameSpace`, `GameRadius`, `GameType` |
+| | [07-02-02.motion-tokens.md](07-02-02.motion-tokens.md) | AGENT | `GameMotion`, 감소 모션, INV-12 추가 |
+| | [07-02-03.theme-assembly.md](07-02-03.theme-assembly.md) | AGENT | `ColorScheme`·`TextTheme`·컴포넌트 테마 조립 |
+| | [07-02-04.pretendard-bundle.md](07-02-04.pretendard-bundle.md) | AGENT | 폰트 3종 번들, OFL 라이선스 동기화 |
+| | [07-02-05.thememode-and-theme-tests.md](07-02-05.thememode-and-theme-tests.md) | AGENT | 테마 모드 저장·연결, 대비 계약 테스트(INV-13·14) |
+| 07-03 | [07-03-01.painter-layers.md](07-03-01.painter-layers.md) | AGENT | `GridPainter` 층 재정의, 토큰 전환, 코어 원 |
+| | [07-03-02.grid-motion.md](07-03-02.grid-motion.md) | AGENT | 컨트롤러 3개, E-01~E-03 |
+| | [07-03-03.grid-tests.md](07-03-03.grid-tests.md) | AGENT | 재그리기 규율, 격자 테스트 확정 |
+| 07-04 | [07-04-01.puzzle-model-extension.md](07-04-01.puzzle-model-extension.md) | AGENT | 진행 계산, 역방향 선택 |
+| | [07-04-02.clue-bar.md](07-04-02.clue-bar.md) | AGENT | `ClueBar` + 입력 통합, E-04 |
+| | [07-04-03.progress-and-submit-button.md](07-04-03.progress-and-submit-button.md) | AGENT | 진행 배지, 제출 버튼 E-05 |
+| | [07-04-04.puzzle-sheets.md](07-04-04.puzzle-sheets.md) | AGENT | 튜토리얼·제출 확인 바텀 시트 E-12 |
+| | [07-04-05.haptics-and-keyboard.md](07-04-05.haptics-and-keyboard.md) | AGENT | H-01~H-03, 키보드 레이아웃 대응 |
+| 07-05 | [07-05-01.home-model-extension.md](07-05-01.home-model-extension.md) | AGENT | `nextLevel`, `justUnlockedId`, 복귀 재로드 (07-02 후 병렬) |
+| | [07-05-02.hero-and-stats.md](07-05-02.hero-and-stats.md) | AGENT | 이어하기 히어로, 통계 한 줄, 페이지 조립 |
+| | [07-05-03.level-card-flip.md](07-05-03.level-card-flip.md) | AGENT | 레벨 카드 3상태, E-10 |
+| 07-06 | [07-06-01.score-header.md](07-06-01.score-header.md) | AGENT | 점수 카운트업 E-06, 정답 링 (07-02 후 병렬) |
+| | [07-06-02.word-result-cards.md](07-06-02.word-result-cards.md) | AGENT | 단어 행 카드, E-07 순차 등장 |
+| | [07-06-03.unlock-burst.md](07-06-03.unlock-burst.md) | AGENT | 해제 연출 E-08 |
+| 07-07 | [07-07-01.route-transitions.md](07-07-01.route-transitions.md) | AGENT | 화면 전환 E-09, `GameRoute` |
+| | [07-07-02.loading-and-error.md](07-07-02.loading-and-error.md) | AGENT | 선형 로딩 E-11, 오류·빈 상태 공통 |
+| | [07-07-03.settings-screen.md](07-07-03.settings-screen.md) | AGENT | 설정 재구성, 테마 모드, 효과음 토글 |
+| | [07-07-04.sound-and-remaining-screens.md](07-07-04.sound-and-remaining-screens.md) | AGENT | S-01, 라이선스·벤치마크 토큰, 마감 점검 |
+| 07-08 | [07-08-01.golden-harness.md](07-08-01.golden-harness.md) | AGENT | 폰트 로드, 골든 헬퍼, 태그 선언 |
+| | [07-08-02.golden-scenes.md](07-08-02.golden-scenes.md) | AGENT | 골든 6장 기록, CI 태그 제외 |
+| | [07-08-03.device-check-report.md](07-08-03.device-check-report.md) | **HUMAN** | 실기기 가독성·성능·IME 재검증 리포트 |
+| | [07-08-04.store-assets-and-icon.md](07-08-04.store-assets-and-icon.md) | MIXED | IMG-01 결정, 스크린샷, 피처 그래픽 |
+| | [07-08-05.image-prompts.md](07-08-05.image-prompts.md) | 참조 | **이미지 생성 프롬프트 묶음** — 작업 문서가 아니다. 저장소의 프롬프트는 전부 여기에만 있다 |
+
+07-05·07-06 묶음은 07-02-05가 끝나면 07-03·07-04와 **병렬**로 진행할 수 있다. 07-07-01은 07-04·07-05·07-06 세 묶음이 모두 끝나야 시작한다.
+
 ---
 
 ## 단계 간 계약 (바꾸면 양쪽 문서 동시 수정)
@@ -125,3 +183,5 @@
 | `manifest.json` | 05-01 | 06-05 |
 | 격자 규칙 (성긴 방식, 2~5음절, 고립 금지) | 01-03 | 01-04~07, 04-02 |
 | 통계 점수 산식 `correct - wrong*2` | 01-02 | 03-03, 03-04 |
+| UI 토큰·모션·이펙트 ID (`GameColors`, `GameMotion`, E-xx, H-xx) | UI-GUIDE 2~3절 (07-02) | 07-03~07-08 |
+| 불변 조건 INV-01~14 + `tool/check_invariants.dart` | UI-GUIDE 7절 (07-01) | 07-02~07-08 검증 절 |

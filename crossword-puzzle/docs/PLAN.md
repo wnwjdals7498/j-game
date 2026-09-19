@@ -9,7 +9,7 @@
 
 ```
  0 환경 구축 ──┬─→ 1 domain 맵 생성기 ──┐
- (+데이터 신청) │                       ├─→ 3 data 연결·실측 ─→ 4 UI ─→ 5 갱신 ─→ 6 배포
+ (+데이터 신청) │                       ├─→ 3 data 연결·실측 ─→ 4 UI ─→ 5 갱신 ─→ 6 배포 ─→ 7 UI v2
                └─→ 2 tools ETL ────────┘
 ```
 
@@ -22,12 +22,13 @@
 | 4 | UI | [plan/04-ui.md](plan/04-ui.md) | 플레이 루프 완성 (홈→퍼즐→결과), 출처 표기 화면 | M~L | 3 |
 | 5 | 갱신 SyncService | [plan/05-sync.md](plan/05-sync.md) | GitHub Releases 기반 6개월 갱신, 통계 보존 검증 | S~M | 4 |
 | 6 | 배포 | [plan/06-release.md](plan/06-release.md) | 서명된 AAB, 스토어 준비물 | S | 5 |
+| 7 | UI v2 (NYT Games 톤) | [plan/07-ui-v2.md](plan/07-ui-v2.md) · 계약 [UI-GUIDE.md](UI-GUIDE.md) | 토큰 층 + 라이트/다크, 6화면 전면 개편, 모션·햅틱, 불변 조건 감시 스크립트, 골든 6장 | M~L | 6 (06-01) |
 
 규모: S = 며칠 이내, M = 1~2주, L = 2주 이상 (혼자 파트타임 기준의 감. 확정치 아님).
 
 ### 세부 계획
 
-각 단계는 **한 세션에서 끝낼 수 있는 단위**로 쪼개져 `docs/plan/NN-MM.slug.md` 에 있다.
+각 단계는 **한 세션에서 끝낼 수 있는 단위**로 쪼개져 `docs/plan/NN-MM.slug.md` 에 있다. 7단계는 한 겹 더 쪼개져 커밋 1개 단위인 `docs/plan/NN-MM-KK.slug.md` 까지 내려간다.
 전체 목록·읽는 법·담당(AGENT/HUMAN) 구분은 **[plan/INDEX.md](plan/INDEX.md)** 참조.
 실제 작업은 세부 계획 문서를 순서대로 따라간다. 위 표의 단계 문서는 그 단계의 개요다.
 
