@@ -1,5 +1,12 @@
 # J Game
 
+게임 프로젝트를 모아 두는 저장소입니다.
+
+- [`crossword-puzzle/`](./crossword-puzzle/): Flutter 낱말퍼즐 구현
+- [`drone-simulator/`](./drone-simulator/): Unity·Windows 드론 조종 시뮬레이터 계획 단계
+
+## crossword-puzzle
+
 한국어 낱말퍼즐을 오프라인에서 즐길 수 있도록 만드는 Flutter 프로젝트입니다. 기기에 포함된 SQLite 사전 데이터로 십자말 격자를 생성하며, 네트워크는 단어 데이터 갱신에만 사용합니다.
 
 ## 핵심 기능
@@ -18,9 +25,13 @@ crossword-puzzle/
 ├─ tools/   사전 데이터를 SQLite로 만드는 오프라인 도구
 ├─ docs/    설계, 단계별 계획, 검증 기록
 └─ asset/   프로젝트 시각 자산
+
+drone-simulator/
+├─ README.md
+└─ docs/plan.md    구현 전 계획
 ```
 
-## 시작하기
+## 낱말퍼즐 시작하기
 
 Flutter SDK를 설치한 뒤 앱 디렉터리에서 실행합니다.
 
@@ -30,7 +41,7 @@ flutter pub get
 flutter run
 ```
 
-## 검증
+## 낱말퍼즐 검증
 
 ```powershell
 cd crossword-puzzle/app
