@@ -6,8 +6,16 @@ type PendingAuth = { provider: string; verifier: string | null };
 export class PendingAuthStore {
   private readonly entries = new Map<string, PendingAuth & { createdAt: number }>();
 
+  get size(): number { return this.entries.size; }
+
   put(state: string, value: PendingAuth): void {
-    this.entries.set(state, { ...value, createdAt: Date.now() });
+    const now = Date.now();
+    for (const [key, entry] of this.entries) {
+      if (now - entry.createdAt >= 600_000) this.entries.delete(key);
+    }
+    this.entries.delete(state);
+    this.entries.set(state, { ...value, createdAt: now });
+    while (this.entries.size > 1000) this.entries.delete(this.entries.keys().next().value!);
   }
 
   take(state: string, now: number): PendingAuth | undefined {

@@ -22,6 +22,7 @@ export function registerAuthRoutes(app: FastifyInstance, config: Config, db: Dat
     const state = randomToken();
     const verifier = settings.pkce ? randomToken() : null;
     pending.put(state, { provider, verifier });
+    reply.setCookie('oauth_state', state, { httpOnly: true, sameSite: 'lax', path: '/auth', maxAge: 600 });
     const url = new URL(settings.authorizeUrl);
     url.searchParams.set('response_type', 'code');
     url.searchParams.set('client_id', settings.clientId);
@@ -36,9 +37,10 @@ export function registerAuthRoutes(app: FastifyInstance, config: Config, db: Dat
   });
 
   app.get<{ Params: { provider: string }; Querystring: { code?: unknown; state?: unknown } }>('/auth/:provider/callback', async (request, reply) => {
+    reply.clearCookie('oauth_state', { path: '/auth' });
     const selected = providerConfig(request.params.provider);
     const { code, state } = request.query;
-    if (!selected || typeof state !== 'string' || !state || typeof code !== 'string' || !code) return reply.code(400).send({ code: 'bad_request' });
+    if (!selected || typeof state !== 'string' || !state || request.cookies.oauth_state !== state || typeof code !== 'string' || !code) return reply.code(400).send({ code: 'bad_request' });
     const entry = pending.take(state, Date.now());
     if (!entry || entry.provider !== selected.provider) return reply.code(400).send({ code: 'bad_request' });
     const { provider, settings } = selected;
@@ -46,6 +48,7 @@ export function registerAuthRoutes(app: FastifyInstance, config: Config, db: Dat
     if (settings.clientSecret) body.set('client_secret', settings.clientSecret);
     if (entry.verifier) body.set('code_verifier', entry.verifier);
     if (provider === 'naver') body.set('state', state);
+    let profile: ReturnType<typeof mapProfile>;
     try {
       const tokenResponse = await fetcher(settings.tokenUrl, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' }, body: body.toString() });
       if (!tokenResponse.ok) return reply.code(400).send({ code: 'bad_request' });
@@ -53,14 +56,14 @@ export function registerAuthRoutes(app: FastifyInstance, config: Config, db: Dat
       if (typeof token?.access_token !== 'string' || !token.access_token) return reply.code(400).send({ code: 'bad_request' });
       const userResponse = await fetcher(settings.userUrl, { headers: { Authorization: `Bearer ${token.access_token}` } });
       if (!userResponse.ok) return reply.code(400).send({ code: 'bad_request' });
-      const profile = mapProfile(provider, await userResponse.json());
-      const user = upsertUser(db, { provider, ...profile, isQa: false });
-      const sid = createSession(db, user.id, SESSION_TTL_SECONDS * 1000);
-      reply.setCookie(SESSION_COOKIE, sid, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: SESSION_TTL_SECONDS });
-      return reply.redirect('/#/games');
+      profile = mapProfile(provider, await userResponse.json());
     } catch {
       return reply.code(400).send({ code: 'bad_request' });
     }
+    const user = upsertUser(db, { provider, ...profile, isQa: false });
+    const sid = createSession(db, user.id, SESSION_TTL_SECONDS * 1000);
+    reply.setCookie(SESSION_COOKIE, sid, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: SESSION_TTL_SECONDS });
+    return reply.redirect('/#/games');
   });
   app.get('/api/auth/providers', async (request) => {
     const providers: ProviderInfo[] = [];
