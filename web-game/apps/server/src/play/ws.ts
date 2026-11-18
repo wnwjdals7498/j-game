@@ -1,5 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import type { WebSocket } from 'ws';
+import type { DatabaseSync } from 'node:sqlite';
+import { getSessionUser } from '../repos/users.js';
+import { SESSION_COOKIE } from '../auth/session.js';
 import type { ServerMessage } from '@jgame/protocol';
 import { GameError, MatchService } from './match.js';
 import { gameError } from './routes.js';
@@ -12,7 +15,7 @@ export class GamePresence {
   }
 }
 
-export function registerPlayWebSocket(app: FastifyInstance, service: MatchService, presence: GamePresence): void {
+export function registerPlayWebSocket(app: FastifyInstance, service: MatchService, presence: GamePresence, db: DatabaseSync): void {
   const games = presence.games;
   function send(socket: WebSocket, message: ServerMessage): void { if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(message)); }
   function broadcast(id: number): void {
@@ -28,8 +31,12 @@ export function registerPlayWebSocket(app: FastifyInstance, service: MatchServic
     if (origin) { try { originValid = new URL(origin).host === request.headers.host; } catch { originValid = false; } }
     if (!request.user || !originValid) { send(socket, { type: 'error', code: 'unauthorized', message: 'Unauthorized' }); socket.close(); return; }
     const userId = request.user.id;
+    const sid = request.cookies[SESSION_COOKIE];
     const subscriptions = new Set<number>();
     socket.on('message', data => {
+      if (!sid || getSessionUser(db, sid, new Date())?.id !== userId) {
+        send(socket, { type: 'error', code: 'unauthorized', message: 'Unauthorized' }); socket.close(); return;
+      }
       try {
         let value: unknown;
         try { value = JSON.parse(data.toString()) as unknown; } catch { throw new GameError('bad_request', 'Invalid message'); }

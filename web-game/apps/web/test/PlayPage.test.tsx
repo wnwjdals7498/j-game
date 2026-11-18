@@ -20,7 +20,7 @@ class FakeWebSocket {
 }
 const user: UserView = { id: 1, name: '사용자', isQa: true, provider: 'qa' };
 const player = { kind: 'human', userId: 1, name: '사용자', isQa: true } as const;
-const game: GameView = { id: 42, gameId: 'omok', mode: 'pvc', status: 'playing', roomCode: null, players: [player, { kind: 'bot', level: 'basic' }], state: omok.initialState(), outcome: { kind: 'ongoing' }, endReason: null, moveCount: 0, online: [true, false] };
+const game: GameView = { id: 42, gameId: 'omok', mode: 'pvc', status: 'playing', turn: 0, roomCode: null, players: [player, { kind: 'bot', level: 'basic' }], state: omok.initialState(), outcome: { kind: 'ongoing' }, endReason: null, moveCount: 0, online: [true, false] };
 beforeEach(() => { FakeWebSocket.instances = []; vi.stubGlobal('WebSocket', FakeWebSocket); location.hash = ''; });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.useRealTimers(); });
 
@@ -83,4 +83,19 @@ test('rematch failure is shown and can be retried', async () => {
   await screen.findByRole('alert');
   expect(screen.getByRole('alert').textContent).toBe('새 대국을 만들지 못했습니다.');
   expect((screen.getByRole('button', { name: '다시 하기' }) as HTMLButtonElement).disabled).toBe(false);
+});
+
+test('turn comes from the common view and QA opponent is labeled', () => {
+  const { container } = render(<PlayPage id={42} user={user} />);
+  const socket = FakeWebSocket.instances[0]!;
+  const opponent = { kind: 'human', userId: 2, name: '상대', isQa: true } as const;
+  act(() => { socket.open(); socket.state({ ...game, mode: 'pvp', players: [player, opponent], turn: 1 }); });
+  expect(screen.getByText('상대 차례')).toBeTruthy();
+  expect(screen.getByText('QA')).toBeTruthy();
+  fireEvent.click(container.querySelector('[data-cell="3,4"]')!);
+  expect(socket.send).toHaveBeenCalledTimes(1);
+  act(() => socket.state({ ...game, state: { ...omok.initialState(), next: 1 }, turn: 0 }));
+  expect(screen.getByText('내 차례')).toBeTruthy();
+  fireEvent.click(container.querySelector('[data-cell="3,4"]')!);
+  expect(socket.send).toHaveBeenCalledTimes(2);
 });

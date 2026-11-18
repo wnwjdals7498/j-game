@@ -46,3 +46,26 @@ test('HTTP game views reflect subscribed sockets', async () => {
   await nextState(b, s => !s.online[0] && s.online[1]);
   expect((await get()).json().game.online).toEqual([false, true]);
 });
+
+test('logout invalidates an existing socket before a move', async () => {
+  const g = await create(); const a = await connect(u1), b = await connect(u2);
+  send(a, { type: 'subscribe', gameId: g.id }); send(b, { type: 'subscribe', gameId: g.id });
+  await nextState(b, s => s.online.every(Boolean));
+  expect((await app.inject({ method: 'POST', url: '/api/auth/logout', headers: { cookie: u1 } })).statusCode).toBe(204);
+  send(a, { type: 'move', gameId: g.id, move: { x: 0, y: 0 } });
+  expect(await next(a, m => m.type === 'error')).toMatchObject({ code: 'unauthorized' });
+  if (a.readyState !== WebSocket.CLOSED) await new Promise<void>(resolve => a.once('close', () => resolve()));
+  expect((await nextState(b, s => !s.online[0])).moveCount).toBe(0);
+  expect((await app.inject({ url: `/api/games/${g.id}`, headers: { cookie: u2 } })).json().game.moveCount).toBe(0);
+});
+test('unknown message type keeps connection usable', async () => {
+  const g = await create(); const a = await connect(u1);
+  send(a, { type: 'nope' }); expect(await next(a, m => m.type === 'error')).toMatchObject({ code: 'bad_request' });
+  send(a, { type: 'subscribe', gameId: g.id }); await nextState(a, () => true);
+});
+test('non-player cannot move or change the move history', async () => {
+  const g = await create(); const a = await connect(u3);
+  send(a, { type: 'move', gameId: g.id, move: { x: 0, y: 0 } });
+  expect(await next(a, m => m.type === 'error')).toMatchObject({ code: 'not_player' });
+  expect((await app.inject({ url: `/api/games/${g.id}`, headers: { cookie: u1 } })).json().game.moveCount).toBe(0);
+});

@@ -114,3 +114,11 @@ test('mutating a returned state does not change later views or move validation',
   expect((svc.getView(g.id).state as { board: (number | null)[] }).board[0]).toBeNull();
   expect(svc.playMove(g.id, u1, { x: 0, y: 0 }).moveCount).toBe(1);
 });
+
+test('view exposes the current turn only while playing', () => {
+  const g = svc.createRoom(u1, { gameId: 'omok', seat: 0 });
+  expect(g.turn).toBeNull();
+  expect(svc.joinRoom(u2, g.roomCode!).turn).toBe(0);
+  expect(svc.playMove(g.id, u1, { x: 0, y: 0 }).turn).toBe(1);
+  expect(svc.resign(g.id, u2).turn).toBeNull();
+});

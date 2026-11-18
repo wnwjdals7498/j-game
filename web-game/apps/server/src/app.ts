@@ -30,7 +30,7 @@ export async function buildApp(config: Config, deps: { db?: DatabaseSync; fetch?
   if (!deps.db) app.addHook('onClose', async () => { db.close(); });
   registerAuthRoutes(app, config, db, deps.fetch ?? fetch);
   registerPlayRoutes(app, db, matches, presence);
-  registerPlayWebSocket(app, matches, presence);
+  registerPlayWebSocket(app, matches, presence, db);
   if (config.webDist && existsSync(config.webDist) && statSync(config.webDist).isDirectory()) await app.register(fastifyStatic, { root: resolve(config.webDist) });
   return app;
 }

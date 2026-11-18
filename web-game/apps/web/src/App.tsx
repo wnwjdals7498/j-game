@@ -19,5 +19,5 @@ export function App() {
   if (parts[0] === 'history') page = <HistoryPage />;
   else if (parts[0] === 'lobby' && parts[1]) page = <LobbyPage gameId={parts[1]} />;
   else if (parts[0] === 'play' && parts[1] && Number.isSafeInteger(Number(parts[1])) && Number(parts[1]) > 0) page = <PlayPage key={parts[1]} id={Number(parts[1])} user={user} />;
-  return <><header><a href="#/games">전통 보드게임</a><span>{user.name}</span><a href="#/history">내 기록</a><button onClick={() => { void fetch('/api/auth/logout', { method: 'POST' }).then(() => { setUser(null); location.hash = '#/login'; }); }}>로그아웃</button></header>{page}</>;
+  return <><header><a href="#/games">전통 보드게임</a><span>{user.name} {user.isQa && <span className="qa-badge">QA</span>}</span><a href="#/history">내 기록</a><button onClick={() => { void fetch('/api/auth/logout', { method: 'POST' }).then(() => { setUser(null); location.hash = '#/login'; }); }}>로그아웃</button></header>{page}</>;
 }
