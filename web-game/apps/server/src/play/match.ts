@@ -18,6 +18,8 @@ export class MatchService extends EventEmitter {
   private cache = new Map<number, Cached>();
   private pending = new Map<number, Promise<void>>();
   private rng: () => number;
+  private timers = new Map<number, { timer: NodeJS.Timeout; resolve: () => void }>();
+  private closed = false;
   constructor(private db: DatabaseSync, private opts: { botDelayMs: number; rng?: () => number }) {
     super(); this.rng = opts.rng ?? Math.random;
   }
@@ -125,11 +127,12 @@ export class MatchService extends EventEmitter {
     return view;
   }
   private scheduleBot(game: GameRow, cached: Cached): void {
-    if (game.mode !== 'pvc' || game.status !== 'playing' || this.pending.has(game.id)) return;
+    if (this.closed || game.mode !== 'pvc' || game.status !== 'playing' || this.pending.has(game.id)) return;
     const rules = this.rules(game.gameId); const turn = rules.currentPlayer(cached.state);
     if ((turn === 0 ? game.player0UserId : game.player1UserId) !== null) return;
     const promise = new Promise<void>(resolve => {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
+        this.timers.delete(game.id);
         let moved = false;
         try {
           const current = this.game(game.id);
@@ -150,8 +153,15 @@ export class MatchService extends EventEmitter {
           resolve();
         }
       }, this.opts.botDelayMs);
+      this.timers.set(game.id, { timer, resolve });
     });
     this.pending.set(game.id, promise);
+  }
+  close(): void {
+    this.closed = true;
+    for (const { timer, resolve } of this.timers.values()) { clearTimeout(timer); resolve(); }
+    this.timers.clear();
+    this.pending.clear();
   }
   async whenIdle(): Promise<void> {
     while (this.pending.size > 0) await Promise.all(this.pending.values());
