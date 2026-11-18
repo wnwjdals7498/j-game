@@ -1,6 +1,9 @@
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 export function openDb(path: string): DatabaseSync {
+  if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
   const db = new DatabaseSync(path);
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, provider TEXT NOT NULL, provider_user_id TEXT NOT NULL, display_name TEXT NOT NULL, is_qa INTEGER NOT NULL, created_at TEXT NOT NULL, UNIQUE (provider, provider_user_id));

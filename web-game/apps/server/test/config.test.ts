@@ -3,7 +3,7 @@ import { loadConfig } from '../src/config.js';
 
 test('loadConfig defaults', () => {
   const c = loadConfig({});
-  expect(c).toMatchObject({ port: 8840, host: '0.0.0.0', qaLogin: false, publicOrigin: 'http://localhost:8840', botDelayMs: 300, google: null, oauth: {} });
+  expect(c).toMatchObject({ port: 8840, host: '0.0.0.0', dbPath: 'data/web-game.sqlite', qaLogin: false, publicOrigin: 'http://localhost:8840', botDelayMs: 300, google: null, oauth: {} });
   expect(c.webDist).toBe(`${process.cwd()}/apps/web/dist`);
 });
 
