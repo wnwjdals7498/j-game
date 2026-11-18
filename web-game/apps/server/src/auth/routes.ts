@@ -4,11 +4,13 @@ import type { ProviderInfo } from '@jgame/protocol';
 import type { Config } from '../config.js';
 import { createSession, deleteSession, upsertUser } from '../repos/users.js';
 import { isRealLoginHost } from './hosts.js';
+import { createGoogleVerifier } from './google.js';
 import { challenge, mapProfile, PendingAuthStore, randomToken, type OAuthProvider } from './oauth.js';
 import { requireUser, SESSION_COOKIE, SESSION_TTL_SECONDS } from './session.js';
 
 export function registerAuthRoutes(app: FastifyInstance, config: Config, db: DatabaseSync, fetcher: typeof fetch): void {
   const pending = new PendingAuthStore();
+  const verifyGoogle = config.google ? createGoogleVerifier(config.google) : null;
   function providerConfig(value: string): { provider: OAuthProvider; settings: NonNullable<Config['oauth'][OAuthProvider]> } | undefined {
     if (value !== 'kakao' && value !== 'naver' && value !== 'github') return undefined;
     const settings = config.oauth[value];
@@ -64,6 +66,24 @@ export function registerAuthRoutes(app: FastifyInstance, config: Config, db: Dat
     const sid = createSession(db, user.id, SESSION_TTL_SECONDS * 1000);
     reply.setCookie(SESSION_COOKIE, sid, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: SESSION_TTL_SECONDS });
     return reply.redirect('/#/games');
+  });
+  if (verifyGoogle) app.post('/api/auth/google', {
+    onRequest: async (request, reply) => {
+      if (!/^application\/json(?:\s*;|\s*$)/i.test(request.headers['content-type'] ?? '')) return reply.code(400).send({ code: 'bad_request' });
+    },
+  }, async (request, reply) => {
+    const body = request.body as { credential?: unknown } | null;
+    if (typeof body?.credential !== 'string') return reply.code(400).send({ code: 'bad_request' });
+    let profile: Awaited<ReturnType<typeof verifyGoogle>>;
+    try {
+      profile = await verifyGoogle(body.credential);
+    } catch {
+      return reply.code(401).send({ code: 'unauthorized' });
+    }
+    const user = upsertUser(db, { provider: 'google', ...profile, isQa: false });
+    const sid = createSession(db, user.id, SESSION_TTL_SECONDS * 1000);
+    reply.setCookie(SESSION_COOKIE, sid, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: SESSION_TTL_SECONDS });
+    return { user };
   });
   app.get('/api/auth/providers', async (request) => {
     const providers: ProviderInfo[] = [];

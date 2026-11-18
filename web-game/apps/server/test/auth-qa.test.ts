@@ -55,7 +55,7 @@ test('logout invalidates the session', async () => {
   expect(me.json()).toEqual({ code: 'unauthorized' });
 });
 test('real providers listed only on localhost host', async () => {
-  const app = await makeApp({ google: { clientId: 'google', jwksUrl: 'url', issuers: [] }, oauth: { github: { clientId: 'github', authorizeUrl: 'url', tokenUrl: 'url', userUrl: 'url', pkce: true } } });
+  const app = await makeApp({ google: { clientId: 'google', jwksUrl: 'https://example.com/jwks', issuers: [] }, oauth: { github: { clientId: 'github', authorizeUrl: 'url', tokenUrl: 'url', userUrl: 'url', pkce: true } } });
   for (const [host, ids] of [['localhost:8840', ['google', 'github', 'qa']], ['10.8.0.1:8840', ['qa']], ['127.0.0.1:8840', ['qa']], ['localhost.example:8840', ['qa']]] as const) {
     const r = await app.inject({ method: 'GET', url: '/api/auth/providers', headers: { host } });
     expect(r.json().providers.map((provider: { id: string }) => provider.id)).toEqual(ids);
