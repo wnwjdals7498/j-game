@@ -4,7 +4,7 @@ import cookie from '@fastify/cookie';
 import websocket from '@fastify/websocket';
 import { MatchService } from './play/match.js';
 import { registerPlayRoutes } from './play/routes.js';
-import { registerPlayWebSocket } from './play/ws.js';
+import { GamePresence, registerPlayWebSocket } from './play/ws.js';
 import type { Config } from './config.js';
 import { openDb } from './db.js';
 import { getSessionUser } from './repos/users.js';
@@ -17,6 +17,7 @@ export async function buildApp(config: Config, deps: { db?: DatabaseSync; fetch?
   await app.register(cookie);
   await app.register(websocket);
   const matches = new MatchService(db, { botDelayMs: config.botDelayMs });
+  const presence = new GamePresence();
   app.addHook('onClose', async () => { matches.close(); });
   app.decorateRequest('user', null);
   app.addHook('onRequest', async (request) => {
@@ -25,7 +26,7 @@ export async function buildApp(config: Config, deps: { db?: DatabaseSync; fetch?
   });
   if (!deps.db) app.addHook('onClose', async () => { db.close(); });
   registerAuthRoutes(app, config, db, deps.fetch ?? fetch);
-  registerPlayRoutes(app, db, matches);
-  registerPlayWebSocket(app, matches);
+  registerPlayRoutes(app, db, matches, presence);
+  registerPlayWebSocket(app, matches, presence);
   return app;
 }

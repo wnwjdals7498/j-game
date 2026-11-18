@@ -4,13 +4,20 @@ import type { ServerMessage } from '@jgame/protocol';
 import { GameError, MatchService } from './match.js';
 import { gameError } from './routes.js';
 
-export function registerPlayWebSocket(app: FastifyInstance, service: MatchService): void {
-  const games = new Map<number, Map<WebSocket, 0 | 1>>();
+export class GamePresence {
+  readonly games = new Map<number, Map<WebSocket, 0 | 1>>();
+  online(id: number): [boolean, boolean] {
+    const seats = [...(this.games.get(id)?.values() ?? [])];
+    return [seats.includes(0), seats.includes(1)];
+  }
+}
+
+export function registerPlayWebSocket(app: FastifyInstance, service: MatchService, presence: GamePresence): void {
+  const games = presence.games;
   function send(socket: WebSocket, message: ServerMessage): void { if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(message)); }
   function broadcast(id: number): void {
     const subscribers = games.get(id); if (!subscribers?.size) return;
-    const seats = [...subscribers.values()];
-    const game = service.getView(id, [seats.includes(0), seats.includes(1)]);
+    const game = service.getView(id, presence.online(id));
     for (const socket of subscribers.keys()) send(socket, { type: 'state', game });
   }
   service.on('update', broadcast);

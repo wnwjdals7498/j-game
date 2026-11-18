@@ -28,3 +28,21 @@ test('move error is sent only to the sender', async () => { const g = await crea
 test('a participant may move without subscribing', async () => { const g = await create(); const a = await connect(u1), b = await connect(u2); send(b, { type: 'subscribe', gameId: g.id }); await nextState(b, () => true); send(a, { type: 'move', gameId: g.id, move: { x: 0, y: 0 } }); expect((await nextState(b, s => s.moveCount === 1)).online).toEqual([false, true]); });
 test('one socket tracks several games and multiple sockets per seat', async () => { const g = await create(), h = await create(); const a = await connect(u1), a2 = await connect(u1), b = await connect(u2); for (const id of [g.id, h.id]) { send(a, { type: 'subscribe', gameId: id }); send(a2, { type: 'subscribe', gameId: id }); send(b, { type: 'subscribe', gameId: id }); await nextState(b, s => s.id === id && s.online.every(Boolean)); } a.close(); for (const id of [g.id, h.id]) expect((await nextState(b, s => s.id === id && s.online.every(Boolean))).online).toEqual([true, true]); a2.close(); for (const id of [g.id, h.id]) await nextState(b, s => s.id === id && !s.online[0] && s.online[1]); });
 test('closing app cancels pending bot timers', async () => { const delayed = await buildApp(testConfig({ botDelayMs: 10000 })); const cookie = await qaLogin(delayed, 'timer'); await delayed.inject({ method: 'POST', url: '/api/games/pvc', headers: { cookie }, payload: { gameId: 'omok', seat: 1, botLevel: 'random' } }); await delayed.close(); });
+
+test('HTTP game views reflect subscribed sockets', async () => {
+  const created = await app.inject({ method: 'POST', url: '/api/rooms', headers: { cookie: u1 }, payload: { gameId: 'omok', seat: 0 } });
+  const g = created.json().game as GameView;
+  const a = await connect(u1);
+  send(a, { type: 'subscribe', gameId: g.id });
+  await nextState(a, s => s.online[0]);
+  const joined = await app.inject({ method: 'POST', url: '/api/rooms/join', headers: { cookie: u2 }, payload: { roomCode: g.roomCode } });
+  expect(joined.json().game.online).toEqual([true, false]);
+  const b = await connect(u2);
+  send(b, { type: 'subscribe', gameId: g.id });
+  await nextState(b, s => s.online.every(Boolean));
+  const get = () => app.inject({ url: `/api/games/${g.id}`, headers: { cookie: u1 } });
+  expect((await get()).json().game.online).toEqual([true, true]);
+  a.close();
+  await nextState(b, s => !s.online[0] && s.online[1]);
+  expect((await get()).json().game.online).toEqual([false, true]);
+});

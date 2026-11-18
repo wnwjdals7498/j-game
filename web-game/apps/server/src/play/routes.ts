@@ -1,6 +1,7 @@
 import type { DatabaseSync } from 'node:sqlite';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { ErrorCode, HistoryItem } from '@jgame/protocol';
+import type { ErrorCode, GameView, HistoryItem } from '@jgame/protocol';
+import type { GamePresence } from './ws.js';
 import { requireUser } from '../auth/session.js';
 import { listUserGames } from '../repos/games.js';
 import { GameError, MatchService, type SeatChoice } from './match.js';
@@ -28,7 +29,8 @@ function playUser(request: FastifyRequest, reply: FastifyReply) {
   if (!request.user) { void reply.code(401).send({ code: 'unauthorized', message: 'Unauthorized' }); return undefined; }
   return requireUser(request, reply);
 }
-export function registerPlayRoutes(app: FastifyInstance, db: DatabaseSync, service: MatchService): void {
+export function registerPlayRoutes(app: FastifyInstance, db: DatabaseSync, service: MatchService, presence: GamePresence): void {
+  const withOnline = (game: GameView): GameView => ({ ...game, online: presence.online(game.id) });
   app.setErrorHandler((error, request, reply) => {
     if (!(error instanceof GameError) && typeof error === 'object' && error !== null && 'statusCode' in error && error.statusCode === 400 && /^\/api\/(?:games(?:\/|$)|rooms(?:\/|$)|me\/games(?:\?|$))/.test(request.url)) return reply.code(400).send({ code: 'bad_request', message: 'Invalid request' });
     if (error instanceof GameError) return reply.code(errorStatus(error.code)).send({ code: error.code, message: error.message });
@@ -38,26 +40,26 @@ export function registerPlayRoutes(app: FastifyInstance, db: DatabaseSync, servi
     const user = playUser(request, reply); if (!user) return reply;
     const p = bodyObject(request.body); const seat = seatOf(p.seat);
     if (typeof p.gameId !== 'string' || (p.botLevel !== 'random' && p.botLevel !== 'basic') || (p.seed !== undefined && (typeof p.seed !== 'number' || !Number.isSafeInteger(p.seed)))) throw new GameError('bad_request', 'Invalid game settings');
-    return reply.code(201).send({ game: service.createPvc(user.id, { gameId: p.gameId, seat, botLevel: p.botLevel, ...(p.seed === undefined ? {} : { seed: p.seed as number }) }) });
+    return reply.code(201).send({ game: withOnline(service.createPvc(user.id, { gameId: p.gameId, seat, botLevel: p.botLevel, ...(p.seed === undefined ? {} : { seed: p.seed as number }) })) });
   });
   app.post('/api/rooms', async (request, reply) => {
     const user = playUser(request, reply); if (!user) return reply;
     const p = bodyObject(request.body); const seat = seatOf(p.seat);
     if (typeof p.gameId !== 'string') throw new GameError('bad_request', 'Invalid game');
-    return reply.code(201).send({ game: service.createRoom(user.id, { gameId: p.gameId, seat }) });
+    return reply.code(201).send({ game: withOnline(service.createRoom(user.id, { gameId: p.gameId, seat })) });
   });
   app.post('/api/rooms/join', async (request, reply) => {
     const user = playUser(request, reply); if (!user) return reply;
     const p = bodyObject(request.body);
     if (typeof p.roomCode !== 'string') throw new GameError('bad_request', 'Invalid room code');
-    return { game: service.joinRoom(user.id, p.roomCode.toUpperCase()) };
+    return { game: withOnline(service.joinRoom(user.id, p.roomCode.toUpperCase())) };
   });
   app.get<{ Params: { id: string } }>('/api/games/:id', async (request, reply) => {
     const user = playUser(request, reply); if (!user) return reply;
     const id = Number(request.params.id);
     if (!Number.isSafeInteger(id) || id < 1) throw new GameError('bad_request', 'Invalid game id');
     if (service.seatOf(id, user.id) === null) throw new GameError('not_player', 'Not a player');
-    return { game: service.getView(id) };
+    return { game: service.getView(id, presence.online(id)) };
   });
   app.get('/api/me/games', async (request, reply) => {
     const user = playUser(request, reply); if (!user) return reply;
