@@ -1,0 +1,17 @@
+:root { font-family: system-ui, sans-serif; color: #202020; background: #f7f5f0; color-scheme: light dark; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: 1rem; border-bottom: 1px solid #777; }
+main { max-width: 640px; padding: 1rem; margin: auto; }
+h1 { font-size: 1.6rem; }
+.stack, form { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+.stack { flex-direction: column; align-items: flex-start; margin: 1rem 0; }
+button, .button, input, select { font: inherit; padding: .55rem .75rem; border-radius: .35rem; }
+button, .button { border: 1px solid #555; background: #fff; color: #222; cursor: pointer; text-decoration: none; }
+input { max-width: 100%; }
+a { color: #174f97; }
+.board { display: block; width: 100%; max-width: 500px; height: auto; margin: 1rem 0; touch-action: manipulation; }
+.actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+li { margin: .7rem 0; overflow-wrap: anywhere; }
+@media (prefers-color-scheme: dark) { :root { color: #f3f3f3; background: #202020; } a { color: #a8ccff; } button, .button { background: #333; color: #fff; border-color: #aaa; } }
+.qa-badge { display: inline-block; padding: 0.1em 0.4em; border-radius: 0.3em; background: #364b65; color: #fff; font-size: 0.75em; font-weight: bold; }
