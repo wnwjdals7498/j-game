@@ -62,5 +62,5 @@ npm run e2e
 호스트에 브라우저 실행 라이브러리가 없으면(예: `libnspr4.so` 없음) Playwright 공식 이미지로 E2E를 실행합니다.
 
 ```bash
-docker run --rm --network host -v "$PWD":/work -w /work mcr.microsoft.com/playwright:v1.65.1-noble npm run e2e
+docker run --rm --network host --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/work -w /work mcr.microsoft.com/playwright:v1.65.1-noble npm run e2e
 ```
