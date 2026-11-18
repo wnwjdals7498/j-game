@@ -17,6 +17,6 @@ export async function buildApp(config: Config, deps: { db?: DatabaseSync; fetch?
     request.user = sid ? getSessionUser(db, sid, new Date()) ?? null : null;
   });
   if (!deps.db) app.addHook('onClose', async () => { db.close(); });
-  registerAuthRoutes(app, config, db);
+  registerAuthRoutes(app, config, db, deps.fetch ?? fetch);
   return app;
 }
