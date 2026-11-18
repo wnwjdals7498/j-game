@@ -1,4 +1,7 @@
 import type { DatabaseSync } from 'node:sqlite';
+import { existsSync, statSync } from 'node:fs';
+import { resolve } from 'node:path';
+import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance } from 'fastify';
 import cookie from '@fastify/cookie';
 import websocket from '@fastify/websocket';
@@ -28,5 +31,6 @@ export async function buildApp(config: Config, deps: { db?: DatabaseSync; fetch?
   registerAuthRoutes(app, config, db, deps.fetch ?? fetch);
   registerPlayRoutes(app, db, matches, presence);
   registerPlayWebSocket(app, matches, presence);
+  if (config.webDist && existsSync(config.webDist) && statSync(config.webDist).isDirectory()) await app.register(fastifyStatic, { root: resolve(config.webDist) });
   return app;
 }
