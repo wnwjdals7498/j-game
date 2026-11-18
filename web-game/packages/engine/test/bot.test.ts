@@ -19,6 +19,13 @@ const botGame = (seed: number, levels: [BotLevel, BotLevel]): OmokMove[] => {
   return moves;
 };
 
+test('random generator keeps 32-bit state over long sequences', () => {
+  const rng = createRng(1);
+  let value = 0;
+  for (let i = 0; i < 4_917_760; i++) value = rng();
+  expect(value).toBe(0.26924679218791425);
+});
+
 test('same seed gives same random game', () => {
   expect(botGame(42, ['random', 'random'])).toEqual(botGame(42, ['random', 'random']));
 });
