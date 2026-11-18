@@ -1,0 +1,20 @@
+services:
+  web-game:
+    build: .
+    ports:
+      - "127.0.0.1:8840:8840"
+      - "10.8.0.1:8840:8840"
+    volumes:
+      - web-game-data:/data
+    environment:
+      DB_PATH: /data/web-game.sqlite
+      QA_LOGIN: ${WEB_GAME_QA_LOGIN:-1}
+      GOOGLE_CLIENT_ID: ${WEB_GAME_GOOGLE_CLIENT_ID:-}
+      KAKAO_CLIENT_ID: ${WEB_GAME_KAKAO_CLIENT_ID:-}
+      KAKAO_CLIENT_SECRET: ${WEB_GAME_KAKAO_CLIENT_SECRET:-}
+      NAVER_CLIENT_ID: ${WEB_GAME_NAVER_CLIENT_ID:-}
+      NAVER_CLIENT_SECRET: ${WEB_GAME_NAVER_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${WEB_GAME_GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${WEB_GAME_GITHUB_CLIENT_SECRET:-}
+volumes:
+  web-game-data:

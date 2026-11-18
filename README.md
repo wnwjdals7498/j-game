@@ -4,6 +4,7 @@
 
 - [`crossword-puzzle/`](./crossword-puzzle/): Flutter 낱말퍼즐 구현
 - [`drone-simulator/`](./drone-simulator/): Unity·Windows 드론 조종 시뮬레이터 계획 단계
+- [`web-game/`](./web-game/): 전통 보드게임 웹 애플리케이션
 
 ## crossword-puzzle
 
