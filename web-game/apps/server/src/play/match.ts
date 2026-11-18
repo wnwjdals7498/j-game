@@ -120,7 +120,7 @@ export class MatchService extends EventEmitter {
       return game.mode === 'pvc' ? { kind: 'bot', level: game.botLevel as BotLevel } : null;
     };
     const outcome: Outcome = game.endReason === 'resign' ? { kind: 'win', winner: game.resignedBy === 0 ? 1 : 0 } : rules.outcome(cached.state);
-    const view: GameView = { id: game.id, gameId: game.gameId, mode: game.mode, status: game.status, roomCode: game.roomCode, players: [player(game.player0UserId), player(game.player1UserId)], state: cached.state, outcome, endReason: game.endReason, moveCount: cached.moveCount, online };
+    const view: GameView = { id: game.id, gameId: game.gameId, mode: game.mode, status: game.status, roomCode: game.roomCode, players: [player(game.player0UserId), player(game.player1UserId)], state: structuredClone(cached.state), outcome, endReason: game.endReason, moveCount: cached.moveCount, online };
     this.scheduleBot(game, cached);
     return view;
   }

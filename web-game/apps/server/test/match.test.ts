@@ -106,3 +106,11 @@ test('a human move during a bot update still schedules the next bot move', async
   });
   await svc.whenIdle(); expect(svc.getView(g.id).moveCount).toBe(3);
 });
+test('mutating a returned state does not change later views or move validation', () => {
+  const g = room();
+  const view = svc.getView(g.id);
+  const state = view.state as { board: (number | null)[] };
+  state.board[0] = 1;
+  expect((svc.getView(g.id).state as { board: (number | null)[] }).board[0]).toBeNull();
+  expect(svc.playMove(g.id, u1, { x: 0, y: 0 }).moveCount).toBe(1);
+});
